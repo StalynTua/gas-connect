@@ -172,10 +172,10 @@ export default function App() {
           </div>
 
           <div className="flex items-center gap-3">
-            {/* Centrifugo Live Status Indicator */}
+            {/* Live Sync Status Indicator */}
             <div className="hidden sm:flex items-center gap-2 bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700/80 text-xs">
-              <Radio className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
-              <span className="text-slate-300 font-medium">Centrifugo v5: Conectado</span>
+              <Radio className="w-3.5 h-3.5 text-sky-400 animate-pulse" />
+              <span className="text-slate-300 font-medium">Flota en Vivo: Polling 5s</span>
             </div>
 
             {/* Refresh Button */}
