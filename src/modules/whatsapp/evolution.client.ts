@@ -25,7 +25,7 @@ export class EvolutionApiClient {
   constructor() {
     this.baseUrl = process.env.EVOLUTION_API_URL || 'http://localhost:8080';
     this.apiKey = process.env.EVOLUTION_API_KEY || 'gasconnect_evolution_token_2026';
-    this.instanceName = process.env.EVOLUTION_INSTANCE_NAME || 'gasconnect-ibarra-pilot';
+    this.instanceName = process.env.EVOLUTION_INSTANCE_NAME || 'gasconnect-ibarra';
   }
 
   getInstanceName(): string {

@@ -17,7 +17,7 @@ export interface QrData {
 
 export function WhatsAppStatusCard() {
   const [status, setStatus] = useState<WhatsAppStatus | null>({
-    instanceName: 'gasconnect-ibarra-pilot',
+    instanceName: 'gasconnect-ibarra',
     baseUrl: 'http://localhost:8080',
     state: 'open',
     connected: true,
@@ -181,7 +181,7 @@ export function WhatsAppStatusCard() {
               </span>
             </div>
             <p className="text-xs text-slate-400 mt-0.5">
-              Instancia: <code className="text-slate-300 font-mono">{status?.instanceName || 'gasconnect-ibarra-pilot'}</code> &bull; Webhook Active: <span className="text-emerald-400 font-medium">/api/v1/whatsapp/webhook</span>
+              Instancia: <code className="text-slate-300 font-mono">{status?.instanceName || 'gasconnect-ibarra'}</code> &bull; Webhook Active: <span className="text-emerald-400 font-medium">/api/v1/whatsapp/webhook</span>
             </p>
           </div>
         </div>
