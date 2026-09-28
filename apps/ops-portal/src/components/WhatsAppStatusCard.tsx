@@ -16,12 +16,7 @@ export interface QrData {
 }
 
 export function WhatsAppStatusCard() {
-  const [status, setStatus] = useState<WhatsAppStatus | null>({
-    instanceName: 'gasconnect-ibarra',
-    baseUrl: 'http://localhost:8080',
-    state: 'open',
-    connected: true,
-  });
+  const [status, setStatus] = useState<WhatsAppStatus | null>(null);
   const [qrData, setQrData] = useState<QrData | null>(null);
   const [showQrModal, setShowQrModal] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -152,7 +147,8 @@ export function WhatsAppStatusCard() {
     return () => clearInterval(qrInterval);
   }, [showQrModal, qrData?.base64, fetchQrCode]);
 
-  const isConnected = status?.connected || status?.state === 'open';
+  const isPending = status === null;
+  const isConnected = !isPending && (status?.connected || status?.state === 'open');
 
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-md mb-6">
@@ -167,17 +163,27 @@ export function WhatsAppStatusCard() {
               <h3 className="text-sm font-bold text-slate-100">WhatsApp Gateway (Evolution API)</h3>
               <span
                 className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-bold ${
-                  isConnected
+                  isPending
+                    ? 'bg-slate-800 text-slate-400 border border-slate-700'
+                    : isConnected
                     ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
                     : 'bg-amber-500/10 text-amber-400 border border-amber-500/30'
                 }`}
               >
                 <span
                   className={`w-2 h-2 rounded-full ${
-                    isConnected ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400 animate-ping'
+                    isPending
+                      ? 'bg-slate-400'
+                      : isConnected
+                      ? 'bg-emerald-400 animate-pulse'
+                      : 'bg-amber-400 animate-ping'
                   }`}
                 />
-                {isConnected ? '🟢 Conectado' : '🟡 Desconectado / QR Requerido'}
+                {isPending
+                  ? '⚪ Consultando...'
+                  : isConnected
+                  ? '🟢 Conectado'
+                  : '🟡 Desconectado / QR Requerido'}
               </span>
             </div>
             <p className="text-xs text-slate-400 mt-0.5">
