@@ -32,7 +32,7 @@ export class OsrmRoutingService {
   private baseUrl: string;
 
   constructor(baseUrl?: string) {
-    this.baseUrl = baseUrl || process.env.OSRM_URL || 'http://localhost:5001';
+    this.baseUrl = baseUrl || process.env.OSRM_URL || process.env.OSRM_BASE_URL || 'http://localhost:5001';
   }
 
   /**

@@ -135,7 +135,7 @@ services:
       REDIS_URL: redis://redis:6379
       CENTRIFUGO_API_URL: http://centrifugo:8000/api
       CENTRIFUGO_API_KEY: ${CENTRIFUGO_API_KEY:-centrifugo_secret_token_ibarra}
-      OSRM_BASE_URL: http://osrm-ecuador:5000
+      OSRM_URL: http://osrm-ecuador:5000
       EVOLUTION_API_URL: http://evolution-api:8080
       EVOLUTION_API_KEY: ${EVOLUTION_API_KEY:-gasconnect_evolution_token_2026}
       EVOLUTION_INSTANCE_NAME: ${EVOLUTION_INSTANCE_NAME:-gasconnect-ibarra}
