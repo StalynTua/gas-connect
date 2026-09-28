@@ -139,6 +139,7 @@ services:
       EVOLUTION_API_URL: http://evolution-api:8080
       EVOLUTION_API_KEY: ${EVOLUTION_API_KEY:-gasconnect_evolution_token_2026}
       EVOLUTION_INSTANCE_NAME: ${EVOLUTION_INSTANCE_NAME:-gasconnect-ibarra}
+      WEBHOOK_GLOBAL_URL: ${WEBHOOK_GLOBAL_URL:-http://app:8000/api/v1/whatsapp/webhook}
     ports:
       - "8000:8000"
     depends_on:

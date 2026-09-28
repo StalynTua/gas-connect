@@ -156,7 +156,7 @@ export class EvolutionApiClient {
     const targetUrl =
       webhookUrl ||
       process.env.WEBHOOK_GLOBAL_URL ||
-      `http://localhost:8000/api/v1/whatsapp/webhook`;
+      `http://host.docker.internal:8000/api/v1/whatsapp/webhook`;
 
     const url = `${this.baseUrl}/webhook/set/${this.instanceName}`;
     try {
