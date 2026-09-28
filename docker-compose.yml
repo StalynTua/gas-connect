@@ -63,6 +63,8 @@ services:
     restart: unless-stopped
     ports:
       - "8080:8080"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     environment:
       SERVER_URL: http://localhost:8080
       AUTHENTICATION_API_KEY: gasconnect_evolution_token_2026
