@@ -91,7 +91,7 @@ services:
     container_name: gasconnect-prod-evolution
     restart: always
     environment:
-      SERVER_URL: ${EVOLUTION_PUBLIC_URL:-http://localhost:8080}
+      SERVER_URL: ${EVOLUTION_PUBLIC_URL:-https://wa.gasconnect.ec}
       AUTHENTICATION_API_KEY: ${EVOLUTION_API_KEY:-gasconnect_evolution_token_2026}
       DATABASE_ENABLED: "true"
       DATABASE_PROVIDER: postgresql
