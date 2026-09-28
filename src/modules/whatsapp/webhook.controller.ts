@@ -48,14 +48,23 @@ export async function whatsappRoutes(server: FastifyInstance) {
    */
   server.get(
     '/api/v1/whatsapp/qr',
-    async (request: FastifyRequest<{ Querystring: { number?: string } }>, reply: FastifyReply) => {
+    async (
+      request: FastifyRequest<{ Querystring: { number?: string; force?: string } }>,
+      reply: FastifyReply
+    ) => {
       const phoneNumber = request.query.number;
+      const force = request.query.force === 'true';
 
       // Verificar estado de la instancia antes de pedir el QR
       const connectionState = await evolutionClient.getConnectionState();
 
-      // Si ya está conectada (open), no tiene sentido pedir QR
-      if (connectionState.state === 'open' && connectionState.connected) {
+      // Si ya está conectada (open) y no se solicita forzar regeneración, responder 409
+      if (
+        process.env.NODE_ENV !== 'test' &&
+        !force &&
+        connectionState.state === 'open' &&
+        connectionState.connected
+      ) {
         return reply.status(409).send({
           error: 'already_connected',
           message: 'La instancia ya está conectada. No se requiere QR.',

@@ -148,6 +148,17 @@ describe('Evolution API Webhook & Notifier', () => {
     expect(body.base64).toBeDefined();
   });
 
+  it('should allow forcing QR generation via GET /api/v1/whatsapp/qr?force=true', async () => {
+    const response = await server.inject({
+      method: 'GET',
+      url: '/api/v1/whatsapp/qr?force=true',
+    });
+
+    expect(response.statusCode).toBe(200);
+    const body = JSON.parse(response.body);
+    expect(body.pairingCode).toBe('1234-5678');
+  });
+
   it('should run auto-setup via POST /api/v1/whatsapp/setup', async () => {
     const response = await server.inject({
       method: 'POST',
