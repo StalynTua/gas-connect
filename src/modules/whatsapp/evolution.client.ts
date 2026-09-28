@@ -52,6 +52,7 @@ export class EvolutionApiClient {
     try {
       const response = await fetch(url, {
         headers: { apikey: this.apiKey },
+        signal: AbortSignal.timeout(8000),
       });
 
       if (!response.ok) {
@@ -103,6 +104,7 @@ export class EvolutionApiClient {
           alwaysOnline: true,
           readMessages: true,
         }),
+        signal: AbortSignal.timeout(8000),
       });
 
       return response.ok || response.status === 403; // 403 significa que ya existe
@@ -128,6 +130,7 @@ export class EvolutionApiClient {
     try {
       const response = await fetch(url, {
         headers: { apikey: this.apiKey },
+        signal: AbortSignal.timeout(8000),
       });
 
       if (!response.ok) return null;
@@ -179,6 +182,7 @@ export class EvolutionApiClient {
             ],
           },
         }),
+        signal: AbortSignal.timeout(8000),
       });
 
       return response.ok;
@@ -200,6 +204,7 @@ export class EvolutionApiClient {
       const response = await fetch(url, {
         method: 'DELETE',
         headers: { apikey: this.apiKey },
+        signal: AbortSignal.timeout(8000),
       });
       return response.ok;
     } catch {
@@ -220,6 +225,7 @@ export class EvolutionApiClient {
       const response = await fetch(url, {
         method: 'POST',
         headers: { apikey: this.apiKey },
+        signal: AbortSignal.timeout(8000),
       });
       return response.ok;
     } catch {
@@ -254,6 +260,7 @@ export class EvolutionApiClient {
           number: formattedNumber,
           text: message,
         }),
+        signal: AbortSignal.timeout(8000),
       });
 
       if (process.env.NODE_ENV === 'test') {
@@ -293,6 +300,7 @@ export class EvolutionApiClient {
             type: 1,
           })),
         }),
+        signal: AbortSignal.timeout(8000),
       });
 
       if (process.env.NODE_ENV === 'test') {
