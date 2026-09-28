@@ -1,0 +1,164 @@
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [postgis]
+}
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+enum TruckStatus {
+  IDLE
+  IN_TRANSIT
+  RESTOCKING
+  OFF_DUTY
+}
+
+enum OrderStatus {
+  PENDING
+  OFFERED
+  ASSIGNED
+  COMPLETED
+  CANCELLED
+  SCHEDULED
+}
+
+enum CylinderType {
+  DOMESTIC_15KG
+  INDUSTRIAL_45KG
+}
+
+enum DispatchResult {
+  ACCEPTED
+  REJECTED
+  TIMEOUT
+}
+
+enum InventoryChangeType {
+  INITIAL_LOAD
+  SALE
+  DEPOT_RESTOCK
+  MANUAL_ADJUSTMENT
+}
+
+model Distributor {
+  id               String   @id @default(uuid())
+  businessName     String   @map("business_name")
+  phoneNumber      String   @map("phone_number")
+  officialCodeArch String?  @map("official_code_arch")
+  isActive         Boolean  @default(true) @map("is_active")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  trucks Truck[]
+  orders Order[]
+
+  @@map("distributors")
+}
+
+model Truck {
+  id                 String      @id @default(uuid())
+  distributorId      String      @map("distributor_id")
+  licensePlate       String      @unique @map("license_plate")
+  driverName         String      @map("driver_name")
+  helperName         String      @map("helper_name")
+  helperPhone        String      @map("helper_phone")
+  currentStockFull   Int         @default(0) @map("current_stock_full")
+  currentStockEmpty  Int         @default(0) @map("current_stock_empty")
+  status             TruckStatus @default(OFF_DUTY)
+  
+  // Geometría PostGIS para coordenadas de última posición conocida
+  lastKnownLocation  Unsupported("geometry(Point, 4326)")? @map("last_known_location")
+  lastLatitude       Float?      @map("last_latitude")
+  lastLongitude      Float?      @map("last_longitude")
+  lastPingAt         DateTime?   @map("last_ping_at")
+
+  createdAt          DateTime    @default(now()) @map("created_at")
+  updatedAt          DateTime    @updatedAt @map("updated_at")
+
+  distributor        Distributor @relation(fields: [distributorId], references: [id])
+  orders             Order[]
+  dispatchAttempts   DispatchAttempt[]
+  inventoryLogs      InventoryLog[]
+
+  @@map("trucks")
+}
+
+model Customer {
+  id              String    @id @default(uuid())
+  phoneNumber     String    @unique @map("phone_number")
+  defaultName     String?   @map("default_name")
+  defaultLandmark String?   @map("default_landmark")
+  defaultLocation Unsupported("geometry(Point, 4326)")? @map("default_location")
+  firstSeenAt     DateTime  @default(now()) @map("first_seen_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  orders Order[]
+
+  @@map("customers")
+}
+
+model Order {
+  id                       String       @id @default(uuid())
+  customerId               String       @map("customer_id")
+  distributorId            String?      @map("distributor_id")
+  assignedTruckId          String?      @map("assigned_truck_id")
+  cylinderType             CylinderType @default(DOMESTIC_15KG) @map("cylinder_type")
+  quantityRequested        Int          @default(1) @map("quantity_requested")
+  quantityDelivered        Int?         @map("quantity_delivered")
+  emptyCylindersVerified   Boolean      @default(true) @map("empty_cylinders_verified")
+  unitPrice                Decimal      @default(3.00) @map("unit_price") @db.Decimal(5, 2)
+  totalAmount              Decimal      @default(3.00) @map("total_amount") @db.Decimal(6, 2)
+  
+  deliveryLocation         Unsupported("geometry(Point, 4326)") @map("delivery_location")
+  deliveryLatitude         Float        @map("delivery_latitude")
+  deliveryLongitude        Float        @map("delivery_longitude")
+  addressLandmark          String?      @map("address_landmark")
+  
+  status                   OrderStatus  @default(PENDING)
+  scheduledFor             DateTime?    @map("scheduled_for")
+  createdAt                DateTime     @default(now()) @map("created_at")
+  fulfilledAt              DateTime?    @map("fulfilled_at")
+
+  customer                 Customer     @relation(fields: [customerId], references: [id])
+  distributor              Distributor? @relation(fields: [distributorId], references: [id])
+  assignedTruck            Truck?       @relation(fields: [assignedTruckId], references: [id])
+  dispatchAttempts         DispatchAttempt[]
+  inventoryLogs            InventoryLog[]
+
+  @@map("orders")
+}
+
+model DispatchAttempt {
+  id                   String         @id @default(uuid())
+  orderId              String         @map("order_id")
+  truckId              String         @map("truck_id")
+  attemptNumber        Int            @default(1) @map("attempt_number")
+  calculatedEtaMinutes Float          @map("calculated_eta_minutes")
+  calculatedDetourMeters Float        @map("calculated_detour_meters")
+  result               DispatchResult
+  offeredAt            DateTime       @default(now()) @map("offered_at")
+  respondedAt          DateTime?      @map("responded_at")
+
+  order                Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  truck                Truck          @relation(fields: [truckId], references: [id])
+
+  @@map("dispatch_attempts")
+}
+
+model InventoryLog {
+  id             String              @id @default(uuid())
+  truckId        String              @map("truck_id")
+  orderId        String?             @map("order_id")
+  changeType     InventoryChangeType @map("change_type")
+  quantityDelta  Int                 @map("quantity_delta")
+  resultingStock Int                 @map("resulting_stock")
+  createdAt      DateTime            @default(now()) @map("created_at")
+
+  truck          Truck               @relation(fields: [truckId], references: [id])
+  order          Order?              @relation(fields: [orderId], references: [id])
+
+  @@map("inventory_logs")
+}

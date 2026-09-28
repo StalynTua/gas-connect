@@ -1,0 +1,61 @@
+# ==============================================================================
+# Coolify Stack Definition: GasConnect Ibarra
+# Despliegue de 1-clic en VPS Hetzner Cloud (Ubuntu 24.04 LTS / Docker)
+# ==============================================================================
+version: "1.0"
+name: "gasconnect-ibarra"
+description: "Motor de Coordinación y Despacho Oportuno de Gas en Ibarra (100% Open Source)"
+compose: "docker-compose.prod.yml"
+
+environments:
+  - name: "POSTGRES_USER"
+    value: "postgres"
+    description: "Usuario de PostgreSQL con extensión PostGIS"
+  - name: "POSTGRES_PASSWORD"
+    value: "gasconnect_secure_pass_2026"
+    description: "Contraseña segura de PostgreSQL"
+  - name: "POSTGRES_DB"
+    value: "gasconnect_ibarra"
+    description: "Base de datos relacional espacial"
+  - name: "CENTRIFUGO_ADMIN_PASSWORD"
+    value: "admin_secret_ibarra_2026"
+    description: "Contraseña del panel administrativo de Centrifugo v5"
+  - name: "CENTRIFUGO_ADMIN_SECRET"
+    value: "centrifugo_secret_token_ibarra"
+    description: "Secret token para firma HMAC de tokens de cabina"
+  - name: "EVOLUTION_API_KEY"
+    value: "gasconnect_evolution_token_2026"
+    description: "API Key para Evolution API v2"
+  - name: "EVOLUTION_INSTANCE_NAME"
+    value: "gasconnect-ibarra"
+    description: "Nombre de la instancia de WhatsApp Business vinculada"
+
+services:
+  app:
+    name: "gasconnect-api"
+    port: 8000
+    public: true
+    domains:
+      - "api.gasconnect.ec"
+    healthcheck:
+      path: "/api/health"
+      interval: 15
+
+  centrifugo:
+    name: "gasconnect-centrifugo"
+    port: 8000
+    public: true
+    domains:
+      - "ws.gasconnect.ec"
+
+  evolution-api:
+    name: "gasconnect-whatsapp"
+    port: 8080
+    public: true
+    domains:
+      - "wa.gasconnect.ec"
+
+  osrm-ecuador:
+    name: "gasconnect-routing"
+    port: 5000
+    public: false
