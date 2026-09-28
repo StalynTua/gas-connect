@@ -27,8 +27,18 @@ export function buildServer(): FastifyInstance {
     },
   });
 
+  const allowedOrigins = process.env.CORS_ORIGIN
+    ? process.env.CORS_ORIGIN.split(',').map((o) => o.trim())
+    : ['http://localhost:3000', 'http://localhost:3001', 'http://127.0.0.1:3000', 'http://127.0.0.1:3001'];
+
   server.register(cors, {
-    origin: '*',
+    origin: (origin, cb) => {
+      if (!origin || allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
+        cb(null, true);
+      } else {
+        cb(null, false);
+      }
+    },
   });
 
   server.register(helmet, {
