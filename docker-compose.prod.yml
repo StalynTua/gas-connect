@@ -107,6 +107,8 @@ services:
       CACHE_REDIS_PREFIX_KEY: evolution_prod
       CACHE_LOCAL_ENABLED: "false"
       CONFIG_SESSION_PHONE_CLIENT_NAME: "GasConnect"
+      CONFIG_SESSION_PHONE_NAME: "Chrome"
+      CONFIG_SESSION_PHONE_VERSION: "2.3000.1043857760"
       QRCODE_LIMIT: "30"
     volumes:
       - evolution_prod_instances:/evolution/instances
