@@ -5,11 +5,13 @@ import { evolutionClient } from './evolution.client.js';
 interface EvolutionWebhookBody {
   event: string;
   instance: string;
+  sender?: string;
   data: {
     key: {
       remoteJid: string;
       fromMe: boolean;
       id: string;
+      participant?: string;
     };
     pushName?: string;
     message?: {
@@ -189,9 +191,14 @@ export async function whatsappRoutes(server: FastifyInstance) {
         return reply.status(200).send({ status: 'ignored' });
       }
 
-      const remoteJid = body.data.key.remoteJid;
-      // Extraer número de teléfono limpio sin sufijo @s.whatsapp.net
-      const phoneNumber = remoteJid.replace('@s.whatsapp.net', '');
+      // Extraer número de teléfono real del cliente.
+      // En WhatsApp moderno, data.key.remoteJid puede ser un identificador interno (@lid),
+      // mientras que el número de teléfono real (@s.whatsapp.net) viene en body.sender.
+      let rawJid = body.data.key.remoteJid || '';
+      if ((rawJid.includes('@lid') || !rawJid.includes('@s.whatsapp.net')) && body.sender) {
+        rawJid = body.sender;
+      }
+      const phoneNumber = rawJid.replace(/@.*$/, '').replace(/\D/g, '');
 
       const messageContent = body.data.message;
       if (!messageContent) {

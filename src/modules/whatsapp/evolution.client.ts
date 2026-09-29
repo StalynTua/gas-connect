@@ -314,43 +314,20 @@ export class EvolutionApiClient {
   }
 
   /**
-   * Envía un mensaje con botones de selección interactivos
+   * Envía un mensaje con opciones de selección interactivas.
+   * WhatsApp Web (Baileys) no admite botones nativos en cuentas estándar (devuelve 400 'Method not available on WhatsApp Baileys').
+   * Formateamos las opciones en una lista numerada clara para compatibilidad universal en cualquier versión de WhatsApp.
    */
   async sendButtonMessage(
     to: string,
     title: string,
     buttons: Array<{ id: string; label: string }>
   ): Promise<boolean> {
-    const formattedNumber = to.replace(/\D/g, '');
-    const url = `${this.baseUrl}/message/sendButtons/${this.instanceName}`;
-
-    try {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          apikey: this.apiKey,
-        },
-        body: JSON.stringify({
-          number: formattedNumber,
-          title,
-          buttons: buttons.map((b) => ({
-            buttonId: b.id,
-            buttonText: { displayText: b.label },
-            type: 1,
-          })),
-        }),
-        signal: AbortSignal.timeout(8000),
-      });
-
-      if (process.env.NODE_ENV === 'test') {
-        return true;
-      }
-      return response.ok;
-    } catch {
-      // Modo offline / simulación
-      return true;
-    }
+    const optionsText = buttons
+      .map((b, idx) => `${idx + 1}️⃣ ${b.label}`)
+      .join('\n');
+    const fullText = `${title}\n\n${optionsText}\n\n_Responde con el número o escribe la opción._`;
+    return this.sendTextMessage(to, fullText);
   }
 }
 
