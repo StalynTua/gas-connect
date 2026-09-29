@@ -22,10 +22,28 @@ export class EvolutionApiClient {
   private apiKey: string;
   private instanceName: string;
 
+  /** QR recibido vía evento QRCODE_UPDATED del webhook de Evolution API v2 */
+  private qrCache: QrCodeResponse | null = null;
+
   constructor() {
     this.baseUrl = process.env.EVOLUTION_API_URL || 'http://localhost:8080';
     this.apiKey = process.env.EVOLUTION_API_KEY || 'gasconnect_evolution_token_2026';
     this.instanceName = process.env.EVOLUTION_INSTANCE_NAME || 'gasconnect-ibarra';
+  }
+
+  /** Almacena el QR llegado vía webhook QRCODE_UPDATED */
+  cacheQr(qr: QrCodeResponse): void {
+    this.qrCache = qr;
+  }
+
+  /** Retorna el QR cacheado (null si no hay ninguno aún) */
+  getCachedQr(): QrCodeResponse | null {
+    return this.qrCache;
+  }
+
+  /** Limpia el caché cuando la instancia se conecta exitosamente */
+  clearQrCache(): void {
+    this.qrCache = null;
   }
 
   getInstanceName(): string {
@@ -110,6 +128,28 @@ export class EvolutionApiClient {
       return response.ok || response.status === 403; // 403 significa que ya existe
     } catch {
       return false;
+    }
+  }
+
+  /**
+   * Llama a /instance/connect para iniciar el socket Baileys.
+   * En Evolution API v2 el QR NO viene en la respuesta HTTP sino que se emite
+   * como evento QRCODE_UPDATED al webhook configurado. Este método es fire-and-forget.
+   */
+  async connectInstance(phoneNumber?: string): Promise<void> {
+    if (process.env.NODE_ENV === 'test') {
+      return;
+    }
+
+    const query = phoneNumber ? `?number=${phoneNumber.replace(/\D/g, '')}` : '';
+    const url = `${this.baseUrl}/instance/connect/${this.instanceName}${query}`;
+    try {
+      await fetch(url, {
+        headers: { apikey: this.apiKey },
+        signal: AbortSignal.timeout(8000),
+      });
+    } catch {
+      // Fire-and-forget: ignorar errores, el QR llegará por webhook
     }
   }
 

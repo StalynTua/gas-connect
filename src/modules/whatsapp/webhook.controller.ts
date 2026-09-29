@@ -44,7 +44,14 @@ export async function whatsappRoutes(server: FastifyInstance) {
   });
 
   /**
-   * Obtiene el código QR o código de emparejamiento para conectar WhatsApp
+   * Obtiene el código QR de vinculación para conectar WhatsApp.
+   *
+   * Flujo real de Evolution API v2:
+   *   1. El cliente llama aquí → el backend llama a /instance/connect en Evolution.
+   *   2. Evolution inicia el socket Baileys en background y emite QRCODE_UPDATED
+   *      al webhook configurado (POST /api/v1/whatsapp/webhook).
+   *   3. El webhook handler almacena el QR en memoria (evolutionClient.cacheQr).
+   *   4. El polling del frontend sigue llamando aquí hasta que el caché tiene el QR.
    */
   server.get(
     '/api/v1/whatsapp/qr',
@@ -71,22 +78,32 @@ export async function whatsappRoutes(server: FastifyInstance) {
         });
       }
 
-      const qrData = await evolutionClient.getQrCode(phoneNumber);
-
-      // La instancia existe pero el socket Baileys aún está iniciando
-      // (state = 'connecting'): el QR todavía no está disponible.
-      // Responder 202 para que el cliente siga polleando sin tratarlo como error.
-      if (!qrData || (!qrData.base64 && !qrData.pairingCode)) {
-        return reply.status(202).send({
-          generating: true,
-          state: connectionState.state,
-          message: 'El código QR se está generando. Reintenta en unos segundos.',
+      // 1. Intentar servir el QR desde el caché (llega vía evento QRCODE_UPDATED)
+      const cached = evolutionClient.getCachedQr();
+      if (cached) {
+        return reply.status(200).send({
+          instanceName: evolutionClient.getInstanceName(),
+          ...cached,
         });
       }
 
-      return reply.status(200).send({
-        instanceName: evolutionClient.getInstanceName(),
-        ...qrData,
+      // 2. Sin caché: llamar a /instance/connect para que Evolution inicie el socket
+      //    y emita el evento QRCODE_UPDATED al webhook. Responder 202 para que el
+      //    cliente siga polleando mientras llega el evento.
+      await evolutionClient.connectInstance(phoneNumber);
+
+      const qrData = await evolutionClient.getQrCode(phoneNumber);
+      if (qrData && (qrData.base64 || qrData.pairingCode)) {
+        return reply.status(200).send({
+          instanceName: evolutionClient.getInstanceName(),
+          ...qrData,
+        });
+      }
+
+      return reply.status(202).send({
+        generating: true,
+        state: connectionState.state,
+        message: 'El código QR se está generando. Reintenta en unos segundos.',
       });
     }
   );
@@ -119,15 +136,56 @@ export async function whatsappRoutes(server: FastifyInstance) {
   });
 
   /**
-   * Webhook principal de Evolution API
+   * Webhook principal de Evolution API.
+   * Maneja tanto eventos de sistema (QRCODE_UPDATED, CONNECTION_UPDATE)
+   * como eventos de mensajes entrantes.
    */
   server.post(
     '/api/v1/whatsapp/webhook',
     async (request: FastifyRequest<{ Body: EvolutionWebhookBody }>, reply: FastifyReply) => {
       const body = request.body;
 
-      // Ignorar mensajes enviados por nosotros mismos o eventos no relevantes
-      if (!body || !body.data || !body.data.key || body.data.key.fromMe) {
+      if (!body || !body.event) {
+        return reply.status(200).send({ status: 'ignored' });
+      }
+
+      // ── Eventos de sistema ───────────────────────────────────────────────────
+
+      if (body.event === 'QRCODE_UPDATED') {
+        // Evolution API v2 entrega el QR vía webhook, no en la respuesta HTTP de
+        // /instance/connect. Lo almacenamos en memoria para que GET /qr lo sirva.
+        const qr = (body.data as any)?.qrcode;
+        if (qr) {
+          evolutionClient.cacheQr({
+            base64: qr.base64,
+            code: qr.code,
+            pairingCode: qr.pairingCode,
+            count: qr.count,
+          });
+          server.log.info(
+            { event: 'QRCODE_UPDATED', count: qr.count },
+            'QR code cached from webhook'
+          );
+        }
+        return reply.status(200).send({ status: 'qr_cached' });
+      }
+
+      if (body.event === 'CONNECTION_UPDATE') {
+        const state = (body.data as any)?.state;
+        if (state === 'open') {
+          // La instancia se conectó exitosamente: el QR ya no es necesario
+          evolutionClient.clearQrCache();
+          server.log.info(
+            { event: 'CONNECTION_UPDATE', state },
+            'WhatsApp connected, QR cache cleared'
+          );
+        }
+        return reply.status(200).send({ status: 'connection_update_handled' });
+      }
+
+      // ── Eventos de mensaje ───────────────────────────────────────────────────
+      // Ignorar mensajes enviados por nosotros mismos o eventos sin payload de mensaje
+      if (!body.data || !body.data.key || body.data.key.fromMe) {
         return reply.status(200).send({ status: 'ignored' });
       }
 
@@ -162,4 +220,3 @@ export async function whatsappRoutes(server: FastifyInstance) {
     }
   );
 }
-
