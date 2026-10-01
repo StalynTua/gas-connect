@@ -126,7 +126,7 @@ services:
   app:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: apps/api/Dockerfile
     container_name: gasconnect-prod-app
     restart: always
     environment:
@@ -151,6 +151,40 @@ services:
         condition: service_healthy
       centrifugo:
         condition: service_started
+    networks:
+      - gasconnect-net
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Frontend Cabina PWA (Nginx Alpine < 25 MB RAM)
+  cab-pwa:
+    build:
+      context: .
+      dockerfile: apps/cab-pwa/Dockerfile
+    container_name: gasconnect-prod-cab-pwa
+    restart: always
+    ports:
+      - "3001:80"
+    networks:
+      - gasconnect-net
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Frontend Ops Portal (Nginx Alpine < 25 MB RAM)
+  ops-portal:
+    build:
+      context: .
+      dockerfile: apps/ops-portal/Dockerfile
+    container_name: gasconnect-prod-ops-portal
+    restart: always
+    ports:
+      - "3002:80"
     networks:
       - gasconnect-net
     logging:

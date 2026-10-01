@@ -7,8 +7,9 @@ GasConnect Ibarra is a monolith that receives gas orders through WhatsApp (Evolu
 This repository contains 3 independent projects coupled through REST/real-time contracts:
 
 | Project | Path | AGENTS.md |
+| Project | Path | AGENTS.md |
 |---|---|---|
-| Backend API | `/` (root) | [`./AGENTS-backend.md`](./AGENTS-backend.md) |
+| Backend API | `apps/api/` | [`apps/api/AGENTS.md`](apps/api/AGENTS.md) / [`./AGENTS-backend.md`](./AGENTS-backend.md) |
 | cab-pwa | `apps/cab-pwa/` | [`apps/cab-pwa/AGENTS.md`](apps/cab-pwa/AGENTS.md) |
 | ops-portal | `apps/ops-portal/` | [`apps/ops-portal/AGENTS.md`](apps/ops-portal/AGENTS.md) |
 
@@ -36,11 +37,11 @@ Changes to these endpoint contracts in the backend (the `dispatch`, `orders`, an
 - Node.js ≥ 20.
 - Backend services implemented as singletons (e.g. `lib/prisma.ts`).
 - Structured logging with Pino in the backend.
-- Each subproject maintains its own `package.json` and `node_modules`; install dependencies from the corresponding directory, not from the root (except for the backend, which lives at the root).
+- Each subproject maintains its own `package.json` and `node_modules` under `apps/` or `packages/`. Install dependencies from root with `pnpm`.
 
 ## Exploring with CodeGraph
 
-The repository uses **a single CodeGraph index at the root** (`.codegraph/`), covering all 3 projects (backend `src/`, `apps/cab-pwa/src/`, `apps/ops-portal/src/`) in one graph. There are no separate indexes per project: the primary use case is tracing cross-dependencies between the backend and frontends, and a single index makes this possible without switching between different databases. Run all commands from the repository root.
+The repository uses **a single CodeGraph index at the root** (`.codegraph/`), covering all projects (backend `apps/api/src/`, `apps/cab-pwa/src/`, `apps/ops-portal/src/`, `packages/contracts/`) in one graph. There are no separate indexes per project: the primary use case is tracing cross-dependencies between the backend and frontends, and a single index makes this possible without switching between different databases. Run all commands from the repository root.
 
 Actual available commands (verified with `codegraph --help`): `init`, `index`, `sync`, `status`, `query`, `explore`, `context`, `node`, `files`, `callers`, `callees`, `impact`, `affected`.
 
@@ -70,7 +71,7 @@ Each project enforces a DDD layer architecture. Before adding code to any projec
 
 | Project | Rule file | Scope |
 |---|---|---|
-| Backend API | [`.agents/rules/ddd-backend.md`](.agents/rules/ddd-backend.md) | `src/modules/`, `src/shared/` |
+| Backend API | [`.agents/rules/ddd-backend.md`](.agents/rules/ddd-backend.md) | `apps/api/src/modules/`, `apps/api/src/shared/` |
 | cab-pwa | [`apps/cab-pwa/AGENTS.md`](apps/cab-pwa/AGENTS.md) — "DDD Architecture Rules" section | `apps/cab-pwa/src/` |
 | ops-portal | [`apps/ops-portal/AGENTS.md`](apps/ops-portal/AGENTS.md) — "DDD Architecture Rules" section | `apps/ops-portal/src/` |
 

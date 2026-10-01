@@ -4,10 +4,11 @@
   "admin_password": "gasconnect_admin_pass",
   "admin_secret": "gasconnect_admin_secret",
   "allowed_origins": ["*"],
-  "allow_anonymous_connect": false,
+  "client_insecure": true,
   "namespaces": [
     {
       "name": "truck",
+      "allow_subscribe_for_anonymous": true,
       "presence": true,
       "history_size": 10,
       "history_ttl": "300s",
@@ -15,6 +16,7 @@
     },
     {
       "name": "distributor",
+      "allow_subscribe_for_anonymous": true,
       "presence": true,
       "history_size": 50,
       "history_ttl": "600s"

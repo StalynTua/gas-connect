@@ -1,10 +1,10 @@
 # ==============================================================================
 # Coolify Stack Definition: GasConnect Ibarra
-# Despliegue de 1-clic en VPS Hetzner Cloud (Ubuntu 24.04 LTS / Docker)
+# Despliegue de 1-clic en VPS Hetzner Cloud (Ubuntu 24.04 LTS / Docker Compose)
 # ==============================================================================
 version: "1.0"
 name: "gasconnect-ibarra"
-description: "Motor de Coordinación y Despacho Oportuno de Gas en Ibarra (100% Open Source)"
+description: "Motor de Coordinación y Despacho Oportuno de Gas en Ibarra (100% Open Source y Self-Hosted)"
 compose: "docker-compose.prod.yml"
 
 environments:
@@ -40,6 +40,20 @@ services:
     healthcheck:
       path: "/api/health"
       interval: 15
+
+  cab-pwa:
+    name: "gasconnect-cab-pwa"
+    port: 80
+    public: true
+    domains:
+      - "cab.gasconnect.ec"
+
+  ops-portal:
+    name: "gasconnect-ops-portal"
+    port: 80
+    public: true
+    domains:
+      - "ops.gasconnect.ec"
 
   centrifugo:
     name: "gasconnect-centrifugo"

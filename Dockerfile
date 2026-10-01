@@ -1,19 +1,19 @@
 # syntax=docker/dockerfile:1
 FROM node:20-alpine AS builder
 
+RUN apk add --no-cache openssl
+RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 WORKDIR /app
 
-# Instalar dependencias de compilación
-COPY package*.json ./
-COPY tsconfig*.json ./
-COPY prisma ./prisma/
+# Archivos de configuración de monorepo
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json turbo.json ./
+COPY packages ./packages
+COPY apps/api ./apps/api
 
-RUN npm ci
-RUN npx prisma generate
-
-# Copiar código fuente y compilar
-COPY src ./src
-RUN npm run build
+# Instalar dependencias y compilar
+RUN pnpm install --frozen-lockfile
+RUN pnpm --filter @gasconnect/contracts run build
+RUN pnpm --filter @gasconnect/api run build
 
 # Imagen de producción ligera
 FROM node:20-alpine AS runner
@@ -21,18 +21,19 @@ FROM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 
-# Instalar openssl para Prisma engine
 RUN apk add --no-cache openssl
+RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 
-COPY package*.json ./
-COPY prisma ./prisma/
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json turbo.json ./
+COPY packages ./packages
+COPY apps/api ./apps/api
 
-RUN npm ci --omit=dev
-RUN npx prisma generate
+RUN pnpm install --frozen-lockfile --prod
+RUN pnpm --filter @gasconnect/api exec prisma generate
 
-# Copiar compilado desde builder
-COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/packages/contracts/dist ./packages/contracts/dist
+COPY --from=builder /app/apps/api/dist ./apps/api/dist
 
 EXPOSE 8000
 
-CMD ["node", "dist/server.js"]
+CMD ["node", "apps/api/dist/server.js"]
