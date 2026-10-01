@@ -178,7 +178,18 @@
 - [x] Arquitectura DDD estricta de 4 capas verificada en backend y frontends.
 - [x] Composition Root modularizado (`app.ts` + `server.ts` < 50 líneas) y encapsulamiento por barrels `index.ts`.
 - [x] 0 llamadas a Prisma fuera de infraestructura y 0 polling de 5s en ops-portal.
-- [x] 38 tests unitarios e integración en verde.
+- [x] 40 tests unitarios e integración en verde.
 - [x] Documentación y registros de decisiones ADR-001 y ADR-002 formalizados.
 - [x] Listo para despliegue productivo unificado en Hetzner Cloud con Coolify.
+
+---
+
+## Phase 7: Real-Time Telemetry & Fleet State Synchronization (`realtime-sync`)
+- [x] **Task 22: Corrección de Autenticación Centrifugo v5 e Inyección de FleetBroadcaster**
+  - **Acceptance:** Centrifugo v5 admite suscripciones directas de clientes sin JWT en modo dev (`client_insecure: true`, namespaces `truck` y `distributor`). El backend Fastify publica en tiempo real a `distributor:default:fleet` ante cambios de estado (`IN_TRANSIT`, `IDLE`) y telemetría.
+  - **Files:** `config/centrifugo.json`, `apps/api/src/modules/fleet/infrastructure/centrifugo-fleet.broadcaster.ts`
+- [x] **Task 23: Consumo en Cab-PWA de Endpoints Operativos y Sincronización con Ops-Portal**
+  - **Acceptance:** `cab-pwa` consume `POST /api/v1/fleet/trucks/:id/status` al aceptar pedidos (`IN_TRANSIT`), completar entregas (`IDLE`), alternar manualmente en cabina y en cada ping de telemetría. `ops-portal` actualiza reactivamente el pin en el mapa de Leaflet sin necesidad de recargar.
+  - **Files:** `packages/contracts/src/telemetry.contract.ts`, `apps/cab-pwa/src/**/*`, `apps/ops-portal/src/**/*`
+
 
