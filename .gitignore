@@ -24,6 +24,11 @@ out/
 # Agent scratch & teamwork logs
 .agents/teamwork/
 
+# Large datasets and map binaries (OSRM)
+data/osrm/*
+!data/osrm/.gitkeep
+
+
 # Testing & Coverage
 coverage/
 *.tsbuildinfo
