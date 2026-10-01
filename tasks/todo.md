@@ -132,3 +132,53 @@
 - [x] Despliegue en VPS completado con Coolify (`coolify.yaml` + `docker-compose.prod.yml`).
 - [x] WhatsApp Business vinculado mediante escaneo de QR en Evolution API.
 - [x] Piloto listo para salir a la calle en Ibarra.
+
+---
+
+## Phase 6: Monorepo pnpm, DDD Architecture & Coolify Unification (`monorepo-ddd`)
+
+- [x] **Task 16: Inicialización de Monorepositorio pnpm, Turborepo y Shared Packages**
+  - **Acceptance:** `pnpm-workspace.yaml`, `turbo.json` v2, `@gasconnect/tsconfig` modular y `@gasconnect/contracts` (37 esquemas Zod / DTOs compilados). Ahorro de espacio en disco > 50%.
+  - **Verify:** `pnpm run build` compila con éxito los paquetes base.
+  - **Files:** `pnpm-workspace.yaml`, `turbo.json`, `package.json`, `packages/tsconfig/*`, `packages/contracts/*`
+  - **Scope:** M
+
+- [x] **Task 17: Reestructuración DDD del Backend Fastify en `apps/api`**
+  - **Acceptance:** Reubicación en `apps/api` (`@gasconnect/api`). Partición estricta de 4 capas DDD (`domain/`, `application/`, `infrastructure/`, `presentation/`) en 5 bounded contexts (`dispatch`, `routing`, `fleet`, `orders`, `whatsapp`). Inyección de dependencias por constructor en Composition Root (`src/server.ts`). Encapsulación 100% de Prisma en repositorios de infraestructura (0 llamadas fuera).
+  - **Verify:** `pnpm --filter @gasconnect/api test` (38/38 tests pasando en verde).
+  - **Files:** `apps/api/package.json`, `apps/api/src/server.ts`, `apps/api/src/modules/**/*`
+  - **Scope:** L
+
+- [x] **Task 18: Reestructuración DDD y Dockerización Nginx de `apps/cab-pwa`**
+  - **Acceptance:** Bounded context `CabOperation` en 4 capas. `cab-store.ts` desacoplado de `fetch` mediante interfaz `ICabApiClient`. Adaptadores de browser en `infrastructure/`. Presupuesto de bundle < 60 kB gzip (52.09 kB logrados). Dockerfile multi-stage Nginx Alpine (< 25 MB RAM).
+  - **Verify:** `pnpm --filter cab-pwa run build` pasa limpiamente.
+  - **Files:** `apps/cab-pwa/src/**/*`, `apps/cab-pwa/Dockerfile`, `apps/cab-pwa/nginx.conf`
+  - **Scope:** M
+
+- [x] **Task 19: Reestructuración DDD, WebSocket Centrifugo y Dockerización de `apps/ops-portal`**
+  - **Acceptance:** Bounded context `FleetDashboard` en 4 capas. Eliminación total del polling HTTP de 5s vía `centrifugo.adapter.ts` en `infrastructure/` conectado al canal `distributor:default:fleet`. Componentes React 100% presentacionales. Dockerfile multi-stage Nginx Alpine (< 25 MB RAM).
+  - **Verify:** `pnpm --filter ops-portal run build` pasa limpiamente.
+  - **Files:** `apps/ops-portal/src/**/*`, `apps/ops-portal/Dockerfile`, `apps/ops-portal/nginx.conf`
+  - **Scope:** M
+
+- [x] **Task 20: Orquestación 100% Coolify, Registro de Decisión ADR-001 y CodeGraph Sync**
+  - **Acceptance:** `docker-compose.prod.yml` y `coolify.yaml` actualizados con `cab.gasconnect.ec` y `ops.gasconnect.ec`. `docs/decisions/ADR-001-monorepo-pnpm-coolify.md` redactado. CodeGraph sincronizado (134 archivos, 927 nodos, 2,131 aristas).
+  - **Verify:** `codegraph status` y `pnpm run build` en verde.
+  - **Files:** `docker-compose.prod.yml`, `coolify.yaml`, `docs/decisions/ADR-001-monorepo-pnpm-coolify.md`
+  - **Scope:** M
+
+- [x] **Task 21: Descomposición Modular del Composition Root de la API en app.ts, server.ts y Barrels de Módulo**
+  - **Acceptance:** Reducción de `server.ts` de 222 a 42 líneas (< 50 líneas). Creación de `apps/api/src/app.ts` como fábrica Fastify y Composition Root modular. Creación de barrels públicos `index.ts` con fábricas `create<Context>Module` en los 5 bounded contexts. Definición de `CompositionRootDependencies` en `server.types.ts`. Actualización de reglas en `.agents/rules/ddd-backend.md`, `AGENTS.md`, `AGENTS-backend.md` y registro en `ADR-002`.
+  - **Verify:** `pnpm --filter @gasconnect/api test` (38/38 tests pasando en verde) y `pnpm --filter @gasconnect/api lint` limpio.
+  - **Files:** `apps/api/src/server.ts`, `apps/api/src/app.ts`, `apps/api/src/server.types.ts`, `apps/api/src/modules/*/index.ts`, `docs/decisions/ADR-002-decomposicion-modular-composition-root-app-server.md`, `.agents/rules/ddd-backend.md`
+  - **Scope:** M
+
+### Checkpoint 6: Monorepositorio Integral Certificado
+- [x] 100% de servicios y frontends orquestados bajo pnpm workspaces y Turborepo.
+- [x] Arquitectura DDD estricta de 4 capas verificada en backend y frontends.
+- [x] Composition Root modularizado (`app.ts` + `server.ts` < 50 líneas) y encapsulamiento por barrels `index.ts`.
+- [x] 0 llamadas a Prisma fuera de infraestructura y 0 polling de 5s en ops-portal.
+- [x] 38 tests unitarios e integración en verde.
+- [x] Documentación y registros de decisiones ADR-001 y ADR-002 formalizados.
+- [x] Listo para despliegue productivo unificado en Hetzner Cloud con Coolify.
+
