@@ -1,0 +1,40 @@
+import type { IRoutingPort } from './modules/routing/domain/routing.port.js';
+import type { ITruckCandidateRepository } from './modules/dispatch/domain/truck-candidate.repository.js';
+import type { IDispatchSessionRepository } from './modules/dispatch/domain/dispatch-session.repository.js';
+import type { IFleetRepository } from './modules/fleet/domain/fleet.repository.js';
+import type { IFleetBroadcaster } from './modules/fleet/domain/fleet-broadcaster.port.js';
+import type { IOrderRepository } from './modules/orders/domain/order.repository.js';
+import type { IEvolutionInstancePort } from './modules/whatsapp/domain/evolution-instance.port.js';
+import type { IMessageSender } from './modules/whatsapp/domain/message-sender.port.js';
+import type { IUserSessionRepository } from './modules/whatsapp/domain/user-session.repository.js';
+import type { StartDispatchUseCase } from './modules/dispatch/application/start-dispatch.use-case.js';
+import type { HandleDispatchDecisionUseCase } from './modules/dispatch/application/handle-dispatch-decision.use-case.js';
+import type { GetFleetStatusUseCase } from './modules/fleet/application/get-fleet-status.use-case.js';
+import type { GetFleetMetricsUseCase } from './modules/fleet/application/get-fleet-metrics.use-case.js';
+import type { GetActivityEventsUseCase } from './modules/fleet/application/get-activity-events.use-case.js';
+import type { UpdateTruckPositionUseCase } from './modules/fleet/application/update-truck-position.use-case.js';
+import type { UpdateTruckStatusUseCase } from './modules/fleet/application/update-truck-status.use-case.js';
+import type { CompleteOrderUseCase } from './modules/orders/application/complete-order.use-case.js';
+import type { ProcessInboundMessageUseCase } from './modules/whatsapp/application/process-inbound-message.use-case.js';
+import type { SimulateOrderUseCase } from './modules/whatsapp/application/simulate-order.use-case.js';
+
+export interface CompositionRootDependencies {
+  routingClient?: IRoutingPort;
+  dispatchSessionRepo?: IDispatchSessionRepository;
+  truckCandidateRepo?: ITruckCandidateRepository;
+  fleetRepo?: IFleetRepository;
+  fleetBroadcaster?: IFleetBroadcaster;
+  orderRepo?: IOrderRepository;
+  evolutionClient?: IEvolutionInstancePort & IMessageSender;
+  userSessionRepo?: IUserSessionRepository;
+  startDispatchUseCase?: StartDispatchUseCase;
+  handleDispatchDecisionUseCase?: HandleDispatchDecisionUseCase;
+  getFleetStatusUseCase?: GetFleetStatusUseCase;
+  getFleetMetricsUseCase?: GetFleetMetricsUseCase;
+  getActivityEventsUseCase?: GetActivityEventsUseCase;
+  updateTruckPositionUseCase?: UpdateTruckPositionUseCase;
+  updateTruckStatusUseCase?: UpdateTruckStatusUseCase;
+  completeOrderUseCase?: CompleteOrderUseCase;
+  processInboundMessageUseCase?: ProcessInboundMessageUseCase;
+  simulateOrderUseCase?: SimulateOrderUseCase;
+}

@@ -1,12 +1,13 @@
 import { useEffect } from 'react';
 import { useCabStore } from './stores/cabStore.js';
 import { useWakeLock } from './hooks/useWakeLock.js';
-import { IdleView } from './components/IdleView.js';
-import { ActiveDeliveryView } from './components/ActiveDeliveryView.js';
-import { IncomingOrderModal } from './components/IncomingOrderModal.js';
+import { IdleView } from './presentation/components/IdleView.js';
+import { ActiveDeliveryView } from './presentation/components/ActiveDeliveryView.js';
+import { IncomingOrderModal } from './presentation/components/IncomingOrderModal.js';
+import { cabCentrifugoAdapter } from './infrastructure/centrifugo.adapter.js';
 
 export function App() {
-  const { state, syncWithBackend, sendTelemetry } = useCabStore();
+  const { state, truckId, syncWithBackend, sendTelemetry, receiveOffer, setConnectionStatus } = useCabStore();
   // Activar Screen Wake Lock para mantener encendida la pantalla en el tablero
   useWakeLock();
 
@@ -19,8 +20,22 @@ export function App() {
       sendTelemetry();
     }, 15000);
 
-    return () => clearInterval(interval);
-  }, []);
+    // Suscripción en tiempo real a Centrifugo para ofertas de despacho entrantes
+    const unsubscribeCentrifugo = cabCentrifugoAdapter.connect(
+      truckId,
+      (offer) => {
+        receiveOffer(offer);
+      },
+      (connected) => {
+        setConnectionStatus(connected);
+      }
+    );
+
+    return () => {
+      clearInterval(interval);
+      unsubscribeCentrifugo();
+    };
+  }, [truckId]);
 
   return (
     <div className="w-full h-screen max-w-md mx-auto flex flex-col bg-slate-950 font-sans shadow-2xl relative overflow-hidden">
