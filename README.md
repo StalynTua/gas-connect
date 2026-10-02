@@ -284,11 +284,11 @@ GasConnect Ibarra &copy; 2026.
 
 **GasConnect Ibarra** es un sistema de coordinación y despacho oportuno de GLP (cilindros 15 kg) en Ibarra, Ecuador. Invierte el modelo tradicional de delivery: en lugar de despachar desde una bodega central, intercepta pedidos que coinciden con la trayectoria de camiones que ya circulan por los barrios, con un desvío máximo de 500 m / 5 min y un costo de infraestructura de ~$12–18/mes.
 
-El repositorio es un **monorepo** con un backend Node.js en la raíz y dos frontends independientes en `apps/`:
+El repositorio es un **monorepo pnpm** organizado en proyectos independientes bajo `apps/` y paquetes compartidos bajo `packages/`:
 
 | Proyecto | Ruta | AGENTS.md |
 |---|---|---|
-| **Backend API** (Fastify monolith) | `/` (raíz) | [`AGENTS-backend.md`](./AGENTS-backend.md) |
+| **Backend API** (Fastify monolith) | `apps/api/` | [`apps/api/AGENTS.md`](./apps/api/AGENTS.md) |
 | **cab-pwa** (PWA ayudante del camión) | `apps/cab-pwa/` | [`apps/cab-pwa/AGENTS.md`](./apps/cab-pwa/AGENTS.md) |
 | **ops-portal** (Panel de operaciones) | `apps/ops-portal/` | [`apps/ops-portal/AGENTS.md`](./apps/ops-portal/AGENTS.md) |
 

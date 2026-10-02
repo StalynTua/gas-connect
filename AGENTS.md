@@ -7,13 +7,76 @@ GasConnect Ibarra is a monolith that receives gas orders through WhatsApp (Evolu
 This repository contains 3 independent projects coupled through REST/real-time contracts:
 
 | Project | Path | AGENTS.md |
-| Project | Path | AGENTS.md |
 |---|---|---|
-| Backend API | `apps/api/` | [`apps/api/AGENTS.md`](apps/api/AGENTS.md) / [`./AGENTS-backend.md`](./AGENTS-backend.md) |
+| Backend API | `apps/api/` | [`apps/api/AGENTS.md`](apps/api/AGENTS.md) |
 | cab-pwa | `apps/cab-pwa/` | [`apps/cab-pwa/AGENTS.md`](apps/cab-pwa/AGENTS.md) |
 | ops-portal | `apps/ops-portal/` | [`apps/ops-portal/AGENTS.md`](apps/ops-portal/AGENTS.md) |
 
-Before working on any of the three, also read the project-specific AGENTS.md — this root document covers only the global overview and shared concerns.
+Before working on any of the three, also read the project-specific AGENTS.md — this root document covers the global governance, shared engineering rules, and cross-project concerns.
+
+Read [CONSTRAINTS.md](CONSTRAINTS.md) before writing code. Do not weaken it to make a change pass.
+
+---
+
+## 🏛️ Governance & Skill-Driven Engineering (`agent-skills`)
+
+Este repositorio opera bajo un modelo guiado por skills de ingeniería de grado de producción (`agent-skills`). La calidad, la verificación empírica y la arquitectura DDD son prioritarias sobre la velocidad.
+
+Antigravity y los agentes de codificación deben seguir este ciclo de vida de forma no negociable:
+
+### 1. Intent → Skill Mapping
+
+Antes de escribir o modificar código, identifica la intención y aplica la skill correspondiente:
+
+| Intención / Tarea | Skill Obligatoria | Protocolo en este Monorepo |
+|---|---|---|
+| **Nueva funcionalidad o cambio arquitectónico** | `spec-driven-development` | Escribir spec técnica o actualizar `tasks/plan.md` antes de codificar. |
+| **Requerimientos ambiguos o diseño abierto** | `interview-me` | Preguntas una a una hasta alcanzar 95% de certeza. |
+| **Desglose de tareas** | `planning-and-task-breakdown` | Tareas atómicas registradas en `tasks/todo.md`. |
+| **Diseño/cambio de endpoints o contratos** | `api-and-interface-design` | **Crucial:** Correr `codegraph impact` para analizar afectación en frontends. |
+| **Construcción e implementación** | `incremental-implementation` + `test-driven-development` | Slices verticales pequeños, TDD (Red-Green-Refactor) y commits de ~100 líneas. |
+| **Desarrollo de UI (cab-pwa / ops-portal)** | `frontend-ui-engineering` | Accesibilidad WCAG 2.1 AA, layouts responsive y respeto estricto a las capas DDD de UI. |
+| **Bugs o fallos en ejecución** | `debugging-and-error-recovery` | Triage de 5 pasos (*reproduce → localize → reduce → fix → guard*). |
+| **Refactorización** | `code-simplification` | Respetar *Chesterton's Fence*; no refactorizar código sin tests de caracterización previos. |
+| **Validación en navegador** | `browser-testing-with-devtools` | Verificar DOM, polling, errores de consola y red con Chrome DevTools MCP. |
+| **Previo a Merge / Pull Request** | `code-review-and-quality` | Auditoría en 5 dimensiones (corrección, legibilidad, arquitectura, seguridad, performance). |
+
+### 2. Ciclo de Vida: The Golden Path
+
+```
+ [1. DEFINE]           [2. PLAN]             [3. BUILD]            [4. VERIFY]          [5. REVIEW]
+Spec Técnica   ───▶ Tareas Atómicas  ───▶  TDD + Slices    ───▶  Pruebas Reales  ───▶  5-Axis Review
+ (tasks/plan)         (tasks/todo)         (~100 líneas)        (Vitest/tsc/MCP)        Pre-merge
+```
+
+1. **DEFINE:** No implementes cambios que afecten más de un archivo sin especificar objetivos, límites y contratos.
+2. **PLAN:** Descompón la solución en tareas pequeñas ordenadas por dependencias en `tasks/todo.md`.
+3. **BUILD:** Aplica TDD: escribe primero la prueba que falle, luego el código mínimo necesario y luego refactoriza.
+4. **VERIFY:** Comprueba con comandos reales (`pnpm test`, `pnpm lint`, `pnpm build`). "Parece correcto" nunca es suficiente.
+5. **REVIEW:** Audita el cambio contra el *Definition of Done* y las reglas DDD antes de darlo por cerrado.
+
+### 3. Anti-Racionalizaciones (Destrucción de Atajos)
+
+| Excusa típica de la IA | Realidad Técnica en GasConnect |
+|---|---|
+| *"Es un cambio simple en la API, no necesito revisar los frontends."* | **Falso.** Un cambio en `apps/api` puede romper `cab-pwa` o `ops-portal`. Ejecuta siempre `codegraph impact`. |
+| *"Comenté este test o usé `@ts-ignore` para avanzar rápido."* | **Inaceptable.** Si un test o tipo falla, detén la línea (*Stop the Line*) y resuelve la causa raíz. |
+| *"Primero escribo el código y luego agregaré los tests."* | Viola TDD. El test a posteriori se sesga hacia el código implementado y enmascara bugs sutiles. |
+| *"Voy a limpiar este bloque de código antiguo que no parece usarse."* | **Chesterton's Fence:** Entiende y verifica con CodeGraph su función antes de eliminarlo. |
+| *"Puse un fetch() dentro del componente React porque era solo un botón."* | Viola la arquitectura DDD del frontend. Toda llamada HTTP pertenece a `infrastructure/`. |
+
+### 4. Monorepo Definition of Done (DoD)
+
+Ninguna tarea se considera terminada hasta validar:
+- [ ] Criterios de aceptación cumplidos según `tasks/plan.md`.
+- [ ] Cobertura con tests unitarios/integración en verde (sin regresiones en `pnpm test`).
+- [ ] Chequeo estricto de tipos superado (`tsc --noEmit` en los proyectos afectados).
+- [ ] Respeto absoluto a las reglas de capas DDD (Backend y Frontends).
+- [ ] Si se modificó un contrato o endpoint, se validó el impacto cruzado con `codegraph impact`.
+- [ ] Cero `console.log` o código de depuración residual (usar Pino en backend).
+- [ ] Checkpoint registrado mediante commit atómico limpio en Git.
+
+---
 
 ## Cross-dependencies between the backend and frontends
 
@@ -30,6 +93,8 @@ Verified with `codegraph explore` (see the CodeGraph section below):
 
 Changes to these endpoint contracts in the backend (the `dispatch`, `orders`, and `fleet` modules; telemetry consumed by cab-pwa belongs to `orders`) require reviewing the impact on both frontends before merging.
 
+---
+
 ## Shared conventions
 
 - Strict TypeScript (`strict: true`) in all 3 projects.
@@ -38,6 +103,8 @@ Changes to these endpoint contracts in the backend (the `dispatch`, `orders`, an
 - Backend services implemented as singletons (e.g. `lib/prisma.ts`).
 - Structured logging with Pino in the backend.
 - Each subproject maintains its own `package.json` and `node_modules` under `apps/` or `packages/`. Install dependencies from root with `pnpm`.
+
+---
 
 ## Exploring with CodeGraph
 
@@ -56,6 +123,8 @@ Examples used during the initial discovery:
 
 When the code changes, run `codegraph sync` from the root to update the index incrementally, or `codegraph index` for a complete rebuild. Do not run `codegraph init` in this repository: the index already exists.
 
+---
+
 ## Task context (`tasks/`)
 
 Project tasks live in `tasks/` at the repository root (a `.task/` directory does not exist and must not be created):
@@ -64,6 +133,8 @@ Project tasks live in `tasks/` at the repository root (a `.task/` directory does
 - `tasks/todo.md` — progress checklist (`[x]`/`[ ]`).
 
 Before implementing a new task, review these files to understand the context and current state. This root AGENTS.md and the AGENTS.md files for each subproject complement `tasks/`; they do not replace it.
+
+---
 
 ## DDD Architecture Rules
 

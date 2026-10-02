@@ -192,4 +192,14 @@
   - **Acceptance:** `cab-pwa` consume `POST /api/v1/fleet/trucks/:id/status` al aceptar pedidos (`IN_TRANSIT`), completar entregas (`IDLE`), alternar manualmente en cabina y en cada ping de telemetría. `ops-portal` actualiza reactivamente el pin en el mapa de Leaflet sin necesidad de recargar.
   - **Files:** `packages/contracts/src/telemetry.contract.ts`, `apps/cab-pwa/src/**/*`, `apps/ops-portal/src/**/*`
 
+---
+
+## Phase 8: Quality Gates & Constraint-Driven Development (`quality-constraints`)
+- [x] **Task 24: Formalización de Estándares en CONSTRAINTS.md y Automatización de Quality Gates**
+  - **Acceptance:** `CONSTRAINTS.md` define línea base no negociable (Floor), reglas cuantitativas de TypeScript, límites de capas DDD (`apps/api`, `cab-pwa`, `ops-portal`), presupuestos de bundle y ratchets de no-regresión. Scripts `scripts/floor-guard.mjs` y `scripts/check-ddd-boundaries.mjs` integrados en scripts de `package.json` (`check:fast`, `check:task`, `check:full`). Directiva obligatoria documentada en todos los `AGENTS.md`.
+  - **Verify:** `pnpm check:fast && pnpm check:task` completan en verde en < 5s.
+  - **Files:** `CONSTRAINTS.md`, `scripts/floor-guard.mjs`, `scripts/check-ddd-boundaries.mjs`, `package.json`, `AGENTS.md`, `AGENTS-backend.md`, `apps/*/AGENTS.md`
+  - **Scope:** S
+
+
 

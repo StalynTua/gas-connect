@@ -1,10 +1,21 @@
 # AGENTS.md — @gasconnect/api (`apps/api/`)
 
-> See also: [`../../AGENTS.md`](../../AGENTS.md) (GasConnect Ibarra monorepo overview) and [`../../AGENTS-backend.md`](../../AGENTS-backend.md).
+> See also: [`../../AGENTS.md`](../../AGENTS.md) (GasConnect Ibarra monorepo overview).
+> Read [CONSTRAINTS.md](../../CONSTRAINTS.md) before writing code. Do not weaken it to make a change pass.
 
 ## Purpose
 
 Fastify monolith that receives gas orders via WhatsApp (Evolution API), determines the nearest truck using PostGIS + OSRM, and orchestrates dispatch via an offer cascade with a 45s timeout. Exposes the REST API consumed by the frontends (`cab-pwa`, `ops-portal`) and coordinates in real-time with Centrifugo.
+
+## Skill-Driven Specialization (`agent-skills`)
+
+Hereda el ciclo de vida y la constitución metodológica de [`../../AGENTS.md`](../../AGENTS.md). En este subproyecto aplican con especial rigor:
+
+- **Contratos & Endpoints:** Al modificar rutas o DTOs en `modules/`, invoca obligatoriamente `api-and-interface-design` y ejecuta `codegraph impact <archivo>` desde la raíz para verificar que no se rompan `cab-pwa` ni `ops-portal`.
+- **Testing & TDD:** `pnpm test` (suite de Vitest). Todo caso de uso nuevo o bug fix requiere TDD estricto (`test-driven-development` con ciclo Red-Green-Refactor).
+- **Verificación de Tipos:** `pnpm lint` (`tsc --noEmit`).
+- **Arquitectura DDD:** Validación contra [`../../.agents/rules/ddd-backend.md`](../../.agents/rules/ddd-backend.md) (dominio puro, Prisma confinado a infraestructura).
+- **Auditoría Pre-Merge:** Invocar `code-review-and-quality` enfocado en concurrencia y transacciones de base de datos.
 
 ## Stack and Versions
 

@@ -20,7 +20,13 @@
     "prisma:generate": "pnpm --filter @gasconnect/api prisma:generate",
     "prisma:migrate": "pnpm --filter @gasconnect/api prisma:migrate",
     "prisma:seed": "pnpm --filter @gasconnect/api prisma:seed",
-    "whatsapp:setup": "pnpm --filter @gasconnect/api whatsapp:setup"
+    "whatsapp:setup": "pnpm --filter @gasconnect/api whatsapp:setup",
+    "check:floor": "node scripts/floor-guard.mjs",
+    "check:ddd": "node scripts/check-ddd-boundaries.mjs",
+    "check:types": "pnpm -r run lint && pnpm --filter cab-pwa exec tsc --noEmit && pnpm --filter ops-portal exec tsc --noEmit",
+    "check:fast": "pnpm check:floor && pnpm check:ddd && pnpm check:types",
+    "check:task": "pnpm check:fast && pnpm test",
+    "check:full": "pnpm check:task && pnpm build"
   },
   "keywords": [
     "gas",

@@ -1,10 +1,20 @@
 # AGENTS.md — cab-pwa
 
 > See also: [`../../AGENTS.md`](../../AGENTS.md) (GasConnect Ibarra monorepo overview).
+> Read [CONSTRAINTS.md](../../CONSTRAINTS.md) before writing code. Do not weaken it to make a change pass.
 
 ## Purpose
 
 Cabin PWA for the truck assistant. Receives dispatch offers in real time, alerts the assistant with an audio alarm, allows accepting/rejecting the offer with a tap, navigating to the destination, and marking the delivery as completed. Sends position telemetry periodically to the backend.
+
+## Skill-Driven Specialization (`agent-skills`)
+
+Hereda el ciclo de vida y la constitución metodológica de [`../../AGENTS.md`](../../AGENTS.md). En este subproyecto aplican con especial rigor:
+
+- **Frontend & Accesibilidad Móvil:** Invoca obligatoriamente `frontend-ui-engineering` (WCAG 2.1 AA, contraste alto para luz diurna en cabina, zonas táctiles grandes y diseño 100% responsivo para smartphone/tablet).
+- **Pruebas en Navegador & APIs Web:** Invoca `browser-testing-with-devtools` para verificar el ciclo de vida de la PWA, Wake Lock API, Audio Alarm y llamadas a la API de geolocalización.
+- **Verificación de Compilación y Tipos:** `pnpm build` (`tsc && vite build`).
+- **Arquitectura DDD de UI:** Respetar la separación estricta: `presentation/` nunca hace `fetch()`, la lógica de negocio reside en `application/cab-store.ts`, y las llamadas HTTP en `infrastructure/`.
 
 ## Stack and Versions
 
@@ -66,44 +76,48 @@ Verified with `codegraph explore "cabStore App.tsx ActiveDeliveryView IdleView I
 
 ## Commands
 
-Run from `apps/cab-pwa/` (subproject with its own `package.json`/`node_modules`; do not install from the root):
+Run from monorepo root:
+- `pnpm --filter cab-pwa dev` — Vite development server.
+- `pnpm --filter cab-pwa build` — `tsc && vite build` (type check and production bundle, budget ≤ 300 kB).
+- `pnpm --filter cab-pwa preview` — serves production build locally.
 
-- `npm install`
-- `npm run dev` — Vite development server.
-- `npm run build` — `tsc && vite build` (compiles TypeScript and generates the production bundle).
-- `npm run preview` — serves the production build locally.
-- **Test**: Not applicable — no test suite is configured in this subproject (no `test` script in `package.json`). Use `npm run build` as minimal verification (fails if there are TypeScript errors).
-- **Lint**: Not applicable — no `lint` script or ESLint configuration in this subproject.
+Or run from `apps/cab-pwa/`:
+- `pnpm dev`, `pnpm build`, `pnpm preview`.
 
-## Code Conventions
+**Testing & Verification:**
+- Minimal verification is `pnpm build` (`tsc && vite build`), which checks types and confirms bundle budget.
+- Logic in `domain/` and `application/` must be pure and decoupled so it can be unit-tested without browser dependencies.
+- **Dependencies:** Never run `npm install`. Install from monorepo root via `pnpm --filter cab-pwa add <pkg>`.
+
+## Code Conventions (DDD Aligned)
 
 - Strict TypeScript (`strict: true`), consistent with the rest of the monorepo.
-- Business state centralized in the custom reactive micro-store `cabStore.ts` (based on `useSyncExternalStore`); avoid duplicating it in components.
+- Architecture adheres strictly to DDD layers (see section below):
+  - Domain types and API contracts in `src/domain/`.
+  - Application state and store in `src/application/cab-store.ts`.
+  - HTTP requests and browser adapters strictly in `src/infrastructure/`.
+  - View components in `src/presentation/` (props in, callbacks out, zero `fetch()`).
 - Styling with Tailwind CSS; use `clsx`/`tailwind-merge` to combine conditional classes.
-- View components (`*View.tsx`, `*Modal.tsx`) kept as presentational, delegating business logic to the store.
 
 ## Exploring with CodeGraph
 
-The repo uses a single CodeGraph index at the root (`.codegraph/`), covering backend + both frontends. Always run commands from the repo root, not from `apps/cab-pwa/`.
-
-Actual available commands: `init`, `index`, `sync`, `status`, `query`, `explore`, `context`, `node`, `files`, `callers`, `callees`, `impact`, `affected`. (`deps`/`usages`/`symbols` **do not exist** in the installed CLI.)
+The repository uses a single CodeGraph index at the root (`.codegraph/`). Consult [`../../AGENTS.md`](../../AGENTS.md) for the complete command reference.
 
 Examples specific to this subproject:
-
-- `codegraph explore "cabStore acceptOffer sendTelemetry syncWithBackend"` — maps the store actions and their REST calls to the backend.
+- `codegraph explore "cabStore acceptOffer sendTelemetry syncWithBackend"` — maps store actions and REST calls.
 - `codegraph callers cabStore.ts:acceptOffer` — finds which components invoke `acceptOffer`.
-- `codegraph impact src/modules/dispatch/dispatch-orchestrator.service.ts` (from the root) — before changing the `/api/v1/dispatch/decision` contract in the backend, use it to confirm that `cabStore.ts` is affected.
+- `codegraph impact src/modules/dispatch/dispatch-orchestrator.service.ts` — before changing `/api/v1/dispatch/decision` in backend, confirms `cab-pwa` blast radius.
 
 ## Task Context (tasks/)
 
-Not applicable — this subproject has no tasks of its own. Monorepo tasks are managed centrally in `tasks/plan.md` and `tasks/todo.md` at the repo root; review those files before implementing changes here.
+This subproject has no separate tasks directory. Monorepo tasks are managed centrally in `tasks/plan.md` and `tasks/todo.md` at the repo root.
 
 ## Rules for Agents
 
 - Do not modify `dist/` or `node_modules/` (generated/installed).
+- Gestor de paquetes: Este monorepo usa **`pnpm`**. Nunca ejecutes `npm install` dentro de este subdirectorio.
 - This subproject strictly depends on the backend REST contracts: `POST /api/v1/dispatch/decision`, `POST /api/v1/orders/complete`, `POST /api/v1/trucks/telemetry` (backend `orders` module) and fleet state synchronization (`GET /api/v1/fleet/status` or equivalent used by `syncWithBackend`). Any changes to these contracts in the backend require updating `cabStore.ts` accordingly; use `codegraph impact` before changing the backend side.
 - Do not assume real-time integrations (`centrifuge`) are already wired in `src/` without verifying in the current code — it is listed as an installed dependency, not confirmed as an active flow in this document.
-- Install/update dependencies only from `apps/cab-pwa/`, not from the monorepo root.
 
 ---
 

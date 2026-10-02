@@ -1,10 +1,21 @@
 # AGENTS.md — ops-portal
 
 > Sub-documento de [`../../AGENTS.md`](../../AGENTS.md). Lee primero el AGENTS.md raíz para la visión global del monorepo GasConnect Ibarra y las dependencias cruzadas entre los 3 proyectos.
+> Read [CONSTRAINTS.md](../../CONSTRAINTS.md) before writing code. Do not weaken it to make a change pass.
 
 ## Propósito
 
 Panel de operaciones (dashboard) para el equipo de despacho: muestra en tiempo (casi) real el estado de la flota de camiones de gas en un mapa, métricas operativas (KPIs), el estado de la conexión de WhatsApp/Evolution API, y un log de eventos de actividad (pedidos, despachos aceptados, alertas de stock bajo). No expone lógica de negocio propia: consume y visualiza datos que produce el backend.
+
+## Skill-Driven Specialization (`agent-skills`)
+
+Hereda el ciclo de vida y la constitución metodológica de [`../../AGENTS.md`](../../AGENTS.md). En este subproyecto aplican con especial rigor:
+
+- **Optimización y Renderizado:** Invoca `performance-optimization` para evitar re-renderizados costosos de Leaflet durante el ciclo de polling de 5 segundos.
+- **Frontend & UI Engineering:** Invoca `frontend-ui-engineering` para la jerarquía visual de métricas, estados de los camiones y feed de eventos.
+- **Pruebas en Navegador:** Invoca `browser-testing-with-devtools` para monitorear el consumo de red del polling HTTP y verificar la correcta visualización de pines en el mapa.
+- **Verificación de Compilación y Tipos:** `pnpm build` (`tsc && vite build`).
+- **Arquitectura DDD de UI:** `App.tsx` debe limitarse a orquestar; el polling reside en `application/useFleetData.ts` y las llamadas HTTP en `infrastructure/fleet-api.client.ts`.
 
 ## Stack y versiones
 
@@ -60,44 +71,46 @@ Para re-explorar cualquiera de estos símbolos tras cambios: `codegraph explore 
 
 ## Comandos
 
-Ejecutar desde `apps/ops-portal/` (no desde la raíz):
+Ejecutar desde la raíz del monorepo:
+- `pnpm --filter ops-portal dev` — servidor de desarrollo Vite.
+- `pnpm --filter ops-portal build` — `tsc && vite build` (chequeo de tipos + build de producción, presupuesto ≤ 500 kB).
+- `pnpm --filter ops-portal preview` — sirve el build de producción localmente.
 
-- `npm install` — instala dependencias de este subproyecto únicamente.
-- `npm run dev` — servidor de desarrollo Vite.
-- `npm run build` — `tsc && vite build` (chequeo de tipos + build de producción).
-- `npm run preview` — sirve el build de `dist/` localmente.
+O ejecutar desde `apps/ops-portal/`:
+- `pnpm dev`, `pnpm build`, `pnpm preview`.
 
-**Test:** No aplica — no hay suite de tests configurada en este subproyecto (no existe script `test` en `package.json`). Usa `npm run build` como verificación mínima de tipos antes de dar por buena una tarea.
+**Testing y Verificación:**
+- La verificación mínima automatizada es `pnpm build` (`tsc && vite build`), que garantiza cero errores de TypeScript y cumplimiento del presupuesto de bundle.
+- La lógica de transformación y hooks en `domain/` y `application/` debe mantenerse pura y desacoplada para facilitar tests unitarios.
+- **Dependencias:** Nunca ejecutes `npm install`. Instala siempre desde la raíz con `pnpm --filter ops-portal add <paquete>`.
 
-**Lint:** No aplica — no hay script `lint` ni configuración de ESLint en este subproyecto. Confía en el chequeo de tipos de `tsc` (parte de `npm run build`) y en revisión manual del estilo.
+## Convenciones de código (Alineadas con DDD)
 
-## Convenciones de código
-
-- TypeScript estricto; los tipos de dominio (`TruckPin`, `ActivityEvent`) se definen y exportan junto al componente que los consume principalmente (`LiveFleetMap.tsx`, `ActivityLog.tsx`), no en un archivo central de tipos.
-- Estado centralizado en `App.tsx` y pasado por props hacia abajo (no hay store global); si el estado crece en complejidad, evalúa introducir un mecanismo dedicado en vez de seguir apilando `useState` en `App.tsx`.
-- Tailwind para estilos, con `clsx`/`tailwind-merge` disponibles para composición condicional de clases.
-- Componentes de `components/` deben mantenerse presentacionales (reciben datos y callbacks por props); la lógica de fetching/polling vive en `App.tsx`.
-- No introducir Zustand ni otro store global sin justificarlo explícitamente: no es una dependencia de este subproyecto hoy.
+- TypeScript estricto (`strict: true`), consistente con todo el monorepo.
+- Respeto riguroso a la arquitectura DDD en 4 capas (ver sección inferior):
+  - Los tipos de dominio (`TruckPin`, `ActivityEvent`, `FleetMetrics`) viven exclusivamente en `src/domain/fleet-dashboard.types.ts`.
+  - La lógica de polling y estado reactivo vive en hooks dentro de `src/application/` (`useFleetData.ts`).
+  - Las peticiones HTTP viven en `src/infrastructure/` (`fleet-api.client.ts`, `whatsapp-api.client.ts`).
+  - `App.tsx` y componentes de `src/presentation/` se mantienen presentacionales (props in, callbacks out, cero llamadas `fetch()` directas).
+- Tailwind para estilos, con utilidades `clsx`/`tailwind-merge`.
 
 ## Exploración con CodeGraph
 
-Se usa el índice único de la raíz (ver `../../AGENTS.md`); todos los comandos se ejecutan desde la raíz del repo, no desde `apps/ops-portal/`.
+Se utiliza el índice único ubicado en la raíz (`.codegraph/`). Consulta [`../../AGENTS.md`](../../AGENTS.md) para la lista completa de comandos de la CLI.
 
-- `codegraph explore "App.tsx fetchFleetData LiveFleetMap MetricsCards WhatsAppStatusCard ActivityLog TrucksList"` — mapea el flujo de polling y el árbol de componentes de este subproyecto.
-- `codegraph callers <símbolo de fleet.controller>` — para ver, desde el lado backend, si algún cambio en `fleet.controller.ts` afecta los endpoints que consume `fetchFleetData()`.
-- `codegraph impact src/modules/fleet/fleet.controller.ts` — antes de modificar las rutas `fleet/status|metrics|events` en el backend, para confirmar que ops-portal aparece en el blast radius.
-- `codegraph status` — para confirmar que el índice sigue actualizado antes de explorar.
-
-Comandos reales disponibles: `init`, `index`, `sync`, `status`, `query`, `explore`, `context`, `node`, `files`, `callers`, `callees`, `impact`, `affected`. No uses `deps`/`usages`/`symbols`: no existen en la CLI instalada.
+Consultas específicas de este subproyecto:
+- `codegraph explore "App.tsx fetchFleetData LiveFleetMap MetricsCards WhatsAppStatusCard ActivityLog TrucksList"` — mapea el flujo de polling y el árbol de componentes.
+- `codegraph callers <símbolo de fleet.controller>` — evalúa si un cambio en `fleet.controller.ts` afecta los endpoints de este dashboard.
+- `codegraph impact src/modules/fleet/fleet.controller.ts` — antes de modificar `fleet/status|metrics|events` en backend, confirma que ops-portal está protegido.
 
 ## Contexto de tareas (`tasks/`)
 
-No aplica — este subproyecto no tiene tareas propias. Las tareas del proyecto se gestionan centralizadamente en `tasks/plan.md` y `tasks/todo.md`, en la raíz del repo, no dentro de `apps/ops-portal/`.
+Este subproyecto no tiene un directorio de tareas independiente. Las tareas se gestionan de forma centralizada en `tasks/plan.md` y `tasks/todo.md` en la raíz del repositorio.
 
 ## Reglas para agentes
 
-- No tocar `dist/` ni `node_modules/` de este subproyecto; son artefactos de build/instalación.
-- Instalar dependencias siempre desde `apps/ops-portal/` (`npm install` en este directorio), nunca desde la raíz.
+- No tocar `dist/` ni `node_modules/` de este subproyecto; son artefactos generados.
+- Gestor de paquetes: Este monorepo usa **`pnpm`**. Nunca ejecutes `npm install` dentro de este subdirectorio.
 - Este subproyecto depende estrictamente de los contratos REST del backend expuestos por el módulo `fleet` (`GET /api/v1/fleet/status`, `/fleet/metrics`, `/fleet/events`) y, para el estado de WhatsApp, del módulo `whatsapp`. Cualquier cambio en la forma de respuesta de esos endpoints en el backend rompe silenciosamente este dashboard (hay fallback a datos mock, así que los errores pueden no ser visibles de inmediato) — verifica el impacto con `codegraph impact` antes de mergear cambios del backend.
 - No describas ni implementes una integración Centrifugo/WebSocket activa en este subproyecto basándote en el indicador visual del header: es una etiqueta estática hasta que el código muestre lo contrario. Si se implementa realtime real, actualiza esta sección y la de Arquitectura.
 - No introduzcas Zustand ni otro store global sin verificar antes que sigue siendo verdad que `App.tsx` no lo usa.
