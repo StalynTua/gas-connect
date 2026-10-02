@@ -1,4 +1,5 @@
 import type { ActiveOffer } from './cab-state.types.js';
+import type { LoginCredentials, LoginResponse } from './auth.types.js';
 
 export interface DispatchDecisionParams {
   orderId: string;
@@ -24,6 +25,8 @@ export interface TelemetryParams {
 }
 
 export interface ICabApiClient {
+  login(credentials: LoginCredentials): Promise<LoginResponse>;
+  logout(token: string): Promise<{ success: boolean; message?: string }>;
   postDispatchDecision(params: DispatchDecisionParams): Promise<{ success: boolean; status?: string; message?: string }>;
   completeOrder(params: CompleteOrderParams): Promise<{ success: boolean; orderId?: string; status?: string }>;
   sendTelemetry(params: TelemetryParams): Promise<{ success: boolean; message?: string }>;
@@ -31,3 +34,4 @@ export interface ICabApiClient {
   simulateOrder(): Promise<ActiveOffer | null>;
   updateTruckStatus(truckId: string, status: 'IDLE' | 'IN_TRANSIT' | 'OFF_DUTY'): Promise<{ success: boolean; message?: string }>;
 }
+

@@ -1,4 +1,5 @@
-import { PrismaClient, TruckStatus, InventoryChangeType } from '@prisma/client';
+import { PrismaClient, TruckStatus, InventoryChangeType, AccountRole } from '@prisma/client';
+import argon2 from 'argon2';
 
 const prisma = new PrismaClient();
 
@@ -6,6 +7,8 @@ async function main() {
   console.log('🌱 Iniciando Seed de GasConnect Ibarra...');
 
   // 1. Limpiar datos existentes
+  await prisma.accountSession.deleteMany();
+  await prisma.account.deleteMany();
   await prisma.dispatchAttempt.deleteMany();
   await prisma.inventoryLog.deleteMany();
   await prisma.order.deleteMany();
@@ -108,8 +111,27 @@ async function main() {
       },
     });
 
-    console.log(`🚚 Camión ${t.licensePlate} (${t.sector}) - Stock: ${t.stockFull} cilindros cargados.`);
+    // Crear cuenta de acceso para el camión / ayudante
+    const defaultPasswordHash = await argon2.hash('GasIbarra2025!', {
+      type: argon2.argon2id,
+      memoryCost: 19456,
+      timeCost: 2,
+      parallelism: 1,
+    });
+
+    await prisma.account.create({
+      data: {
+        username: t.licensePlate,
+        passwordHash: defaultPasswordHash,
+        role: AccountRole.TRUCK_HELPER,
+        isActive: true,
+        truckId: truck.id,
+      },
+    });
+
+    console.log(`🚚 Camión ${t.licensePlate} (${t.sector}) - Stock: ${t.stockFull} cilindros | Cuenta creada (clave: GasIbarra2025!).`);
   }
+
 
   // 4. Crear cliente de prueba en Ibarra
   const customer = await prisma.customer.create({

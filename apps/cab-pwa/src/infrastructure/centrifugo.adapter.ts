@@ -20,14 +20,16 @@ export class CabCentrifugoAdapter {
   connect(
     truckId: string,
     onOffer: (offer: ActiveOffer) => void,
-    onStatusChange?: (connected: boolean) => void
+    onStatusChange?: (connected: boolean) => void,
+    token = ''
   ): () => void {
     if (typeof window === 'undefined') return () => {};
+    if (!truckId) return () => {};
 
     try {
       const endpoint = this.getEndpoint();
       this.client = new Centrifuge(endpoint, {
-        token: '',
+        token: token || '',
       });
 
       this.client.on('connected', () => {

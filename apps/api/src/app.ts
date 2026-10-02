@@ -7,6 +7,7 @@ import { createFleetModule } from './modules/fleet/index.js';
 import { createOrdersModule } from './modules/orders/index.js';
 import { createDispatchModule } from './modules/dispatch/index.js';
 import { createWhatsappModule } from './modules/whatsapp/index.js';
+import { createAuthModule } from './modules/auth/index.js';
 
 export function buildServer(overrides: CompositionRootDependencies = {}): FastifyInstance {
   const server = Fastify({
@@ -94,11 +95,19 @@ export function buildServer(overrides: CompositionRootDependencies = {}): Fastif
     simulateOrderUseCase: overrides.simulateOrderUseCase,
   });
 
+  const auth = createAuthModule({
+    accountRepo: overrides.accountRepo,
+    sessionRepo: overrides.sessionRepo,
+    loginUseCase: overrides.loginUseCase,
+  });
+
   // ── Registro de Rutas por Módulo ─────────────────────────────────────────
   fleet.registerRoutes(server);
   orders.registerRoutes(server);
   dispatch.registerRoutes(server);
   whatsapp.registerRoutes(server);
+  auth.registerRoutes(server);
 
   return server;
 }
+

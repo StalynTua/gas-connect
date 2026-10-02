@@ -17,6 +17,8 @@ import type { UpdateTruckStatusUseCase } from './modules/fleet/application/updat
 import type { CompleteOrderUseCase } from './modules/orders/application/complete-order.use-case.js';
 import type { ProcessInboundMessageUseCase } from './modules/whatsapp/application/process-inbound-message.use-case.js';
 import type { SimulateOrderUseCase } from './modules/whatsapp/application/simulate-order.use-case.js';
+import type { IAccountRepository, ISessionRepository } from './modules/auth/domain/auth.repository.js';
+import type { LoginUseCase } from './modules/auth/application/login.use-case.js';
 
 export interface CompositionRootDependencies {
   routingClient?: IRoutingPort;
@@ -25,6 +27,8 @@ export interface CompositionRootDependencies {
   fleetRepo?: IFleetRepository;
   fleetBroadcaster?: IFleetBroadcaster;
   orderRepo?: IOrderRepository;
+  accountRepo?: IAccountRepository;
+  sessionRepo?: ISessionRepository;
   evolutionClient?: IEvolutionInstancePort & IMessageSender;
   userSessionRepo?: IUserSessionRepository;
   startDispatchUseCase?: StartDispatchUseCase;
@@ -37,4 +41,6 @@ export interface CompositionRootDependencies {
   completeOrderUseCase?: CompleteOrderUseCase;
   processInboundMessageUseCase?: ProcessInboundMessageUseCase;
   simulateOrderUseCase?: SimulateOrderUseCase;
+  loginUseCase?: LoginUseCase;
 }
+

@@ -19,6 +19,7 @@
     "start": "pnpm --filter @gasconnect/api start",
     "prisma:generate": "pnpm --filter @gasconnect/api prisma:generate",
     "prisma:migrate": "pnpm --filter @gasconnect/api prisma:migrate",
+    "prisma:push": "pnpm --filter @gasconnect/api prisma:push",
     "prisma:seed": "pnpm --filter @gasconnect/api prisma:seed",
     "whatsapp:setup": "pnpm --filter @gasconnect/api whatsapp:setup",
     "check:floor": "node scripts/floor-guard.mjs",

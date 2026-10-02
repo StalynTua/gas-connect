@@ -1,9 +1,11 @@
 import { useCabStore, ActiveOffer } from '../../application/cab-store.js';
+import { useAuthStore } from '../../application/auth-store.js';
 import { cabApiClient } from '../../infrastructure/cab-api.client.js';
-import { Truck, Wifi, ShieldAlert, Sparkles, Navigation } from 'lucide-react';
+import { Truck, Wifi, ShieldAlert, Sparkles, Navigation, LogOut } from 'lucide-react';
 
 export function IdleView() {
   const { licensePlate, helperName, stockFull, isConnected, isDBSynced, receiveOffer, setTruckStatus } = useCabStore();
+  const { logout } = useAuthStore();
 
   const handleSimulateIncomingOrder = async () => {
     // 1. Intentar crear orden simulada real en el backend para generar sesión de despacho válida
@@ -45,9 +47,9 @@ export function IdleView() {
         <div className="flex items-center justify-between border-b border-slate-800 pb-3">
           <div className="flex items-center gap-2">
             <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
-            <span className="text-xs uppercase font-extrabold text-emerald-400">Disponible (Patrullaje)</span>
+            <span className="text-xs uppercase font-extrabold text-emerald-400">Disponible</span>
           </div>
-          <div className="flex items-center gap-2 text-xs font-bold">
+          <div className="flex items-center gap-2.5 text-xs font-bold">
             <span
               className={`px-2 py-0.5 rounded text-[10px] uppercase font-black ${
                 isDBSynced ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
@@ -59,6 +61,18 @@ export function IdleView() {
               <Wifi className={`w-3.5 h-3.5 ${isConnected ? 'text-emerald-400' : 'text-red-400'}`} />
               {isConnected ? '4G' : 'Sin Red'}
             </div>
+            <button
+              onClick={() => {
+                if (window.confirm('¿Desea cerrar sesión y finalizar el turno de este camión?')) {
+                  logout();
+                }
+              }}
+              title="Cerrar turno / Salir"
+              className="p-1 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition"
+              aria-label="Cerrar turno"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
           </div>
         </div>
 

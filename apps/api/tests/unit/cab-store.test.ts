@@ -89,4 +89,62 @@ describe('In-Cab PWA Helper Workflow & State Machine', () => {
     await store.setTruckStatus('IDLE');
     expect(useCabStore.getState().state).toBe('IDLE');
   });
+
+  it('should toggle duty status between IDLE and OFF_DUTY using setDutyStatus', async () => {
+    let lastStatusUpdate: string | null = null;
+    const mockClient: any = {
+      updateTruckStatus: async (_truckId: string, status: string) => {
+        lastStatusUpdate = status;
+        return { success: true };
+      },
+      sendTelemetry: async () => ({ success: true }),
+    };
+
+    const { buildCabStore } = await import('../../../cab-pwa/src/application/cab-store.js');
+    const storeHook = buildCabStore(mockClient);
+    storeHook.setState({ truckId: 'IAA-1041', state: 'IDLE' });
+
+    await storeHook.getState().setDutyStatus('OFF_DUTY');
+    expect(storeHook.getState().state).toBe('OFF_DUTY');
+    expect(lastStatusUpdate).toBe('OFF_DUTY');
+
+    await storeHook.getState().setDutyStatus('IDLE');
+    expect(storeHook.getState().state).toBe('IDLE');
+    expect(lastStatusUpdate).toBe('IDLE');
+  });
+
+  it('should prevent changing duty status when state is IN_TRANSIT', async () => {
+    let called = false;
+    const mockClient: any = {
+      updateTruckStatus: async () => {
+        called = true;
+        return { success: true };
+      },
+    };
+
+    const { buildCabStore } = await import('../../../cab-pwa/src/application/cab-store.js');
+    const storeHook = buildCabStore(mockClient);
+    storeHook.setState({ truckId: 'IAA-1041', state: 'IN_TRANSIT' });
+
+    await storeHook.getState().setDutyStatus('OFF_DUTY');
+    expect(storeHook.getState().state).toBe('IN_TRANSIT');
+    expect(called).toBe(false);
+  });
+
+  it('should not send telemetry when state is OFF_DUTY', async () => {
+    let telemetrySent = false;
+    const mockClient: any = {
+      sendTelemetry: async () => {
+        telemetrySent = true;
+        return { success: true };
+      },
+    };
+
+    const { buildCabStore } = await import('../../../cab-pwa/src/application/cab-store.js');
+    const storeHook = buildCabStore(mockClient);
+    storeHook.setState({ truckId: 'IAA-1041', state: 'OFF_DUTY' });
+
+    await storeHook.getState().sendTelemetry();
+    expect(telemetrySent).toBe(false);
+  });
 });

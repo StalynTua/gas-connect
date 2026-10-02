@@ -5,6 +5,7 @@ import type {
   TelemetryParams,
 } from '../domain/api-contracts.js';
 import type { ActiveOffer } from '../domain/cab-state.types.js';
+import type { LoginCredentials, LoginResponse } from '../domain/auth.types.js';
 
 async function safeFetch(path: string, init?: RequestInit): Promise<Response> {
   if (typeof window === 'undefined') {
@@ -18,6 +19,56 @@ export class CabApiClient implements ICabApiClient {
 
   constructor(baseUrl = '') {
     this.baseUrl = baseUrl;
+  }
+
+  async login(credentials: LoginCredentials): Promise<LoginResponse> {
+    try {
+      const res = await safeFetch(`${this.baseUrl}/api/v1/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(credentials),
+      });
+      const data = (await res.json().catch(() => ({}))) as any;
+      if (res.ok && data.success) {
+        return {
+          success: true,
+          token: data.token,
+          truckId: data.truckId,
+          licensePlate: data.licensePlate,
+          helperName: data.helperName,
+        };
+      }
+      return {
+        success: false,
+        error: data.error || (res.status === 401 ? 'Credenciales inválidas' : `Error (${res.status})`),
+      };
+    } catch (err) {
+      console.warn('[CabApiClient] login network error:', err);
+      return {
+        success: false,
+        error: 'Sin conexión con el servidor. Verifique su red.',
+      };
+    }
+  }
+
+  async logout(token: string) {
+    try {
+      const res = await safeFetch(`${this.baseUrl}/api/v1/auth/logout`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ token }),
+      });
+      if (res.ok) {
+        return (await res.json()) as { success: boolean; message?: string };
+      }
+      return { success: false };
+    } catch (err) {
+      console.warn('[CabApiClient] logout error:', err);
+      return { success: false, message: String(err) };
+    }
   }
 
   async postDispatchDecision(params: DispatchDecisionParams) {

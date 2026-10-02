@@ -82,6 +82,7 @@ model Truck {
   orders             Order[]
   dispatchAttempts   DispatchAttempt[]
   inventoryLogs      InventoryLog[]
+  account            Account?
 
   @@map("trucks")
 }
@@ -162,3 +163,37 @@ model InventoryLog {
 
   @@map("inventory_logs")
 }
+
+enum AccountRole {
+  TRUCK_HELPER
+  OPS_OPERATOR
+  CUSTOMER
+}
+
+model Account {
+  id           String           @id @default(uuid())
+  username     String           @unique
+  passwordHash String           @map("password_hash")
+  role         AccountRole      @default(TRUCK_HELPER)
+  isActive     Boolean          @default(true) @map("is_active")
+  createdAt    DateTime         @default(now()) @map("created_at")
+  updatedAt    DateTime         @updatedAt @map("updated_at")
+
+  truckId      String?          @unique @map("truck_id")
+  truck        Truck?           @relation(fields: [truckId], references: [id])
+  sessions     AccountSession[]
+
+  @@map("accounts")
+}
+
+model AccountSession {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  accountId String   @map("account_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  account   Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+
+  @@map("account_sessions")
+}
+

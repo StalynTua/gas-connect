@@ -3,6 +3,7 @@ import type { CabStoreState, ActiveOffer, CabState } from '../domain/cab-state.t
 import type { ICabApiClient } from '../domain/api-contracts.js';
 import { cabApiClient } from '../infrastructure/cab-api.client.js';
 import { cabAudioAlarm } from '../infrastructure/audio-alarm.adapter.js';
+import { authStorageAdapter } from '../infrastructure/auth-storage.adapter.js';
 
 export type { CabStoreState, ActiveOffer, CabState };
 
@@ -37,10 +38,12 @@ function createStore<T>(initialStateFn: (set: (action: SetStateAction<T>) => voi
 }
 
 export function buildCabStore(client: ICabApiClient = cabApiClient) {
+  const initialSession = authStorageAdapter.getStoredSession();
+
   return createStore<CabStoreState>((set, get) => ({
-    truckId: 'truck-ceibos-1',
-    licensePlate: 'IAA-1041',
-    helperName: 'Luis Muenala',
+    truckId: initialSession?.truckId ?? '',
+    licensePlate: initialSession?.licensePlate ?? '',
+    helperName: initialSession?.helperName ?? '',
     stockFull: 40,
     stockEmpty: 0,
     state: 'IDLE',
@@ -54,7 +57,7 @@ export function buildCabStore(client: ICabApiClient = cabApiClient) {
         truckId: info.truckId,
         licensePlate: info.licensePlate,
         helperName: info.helperName,
-        stockFull: info.stock,
+        stockFull: info.stock ?? get().stockFull,
       }),
 
     setConnectionStatus: (connected) => set({ isConnected: connected }),
@@ -153,6 +156,7 @@ export function buildCabStore(client: ICabApiClient = cabApiClient) {
 
     syncWithBackend: async () => {
       const { truckId } = get();
+      if (!truckId) return;
       const res = await client.syncWithBackend(truckId);
       if (res.success && res.truck) {
         set({
@@ -168,6 +172,7 @@ export function buildCabStore(client: ICabApiClient = cabApiClient) {
 
     sendTelemetry: async (lat, lng) => {
       const { truckId, stockFull, state } = get();
+      if (!truckId) return;
       const latitude = lat ?? 0.3475;
       const longitude = lng ?? -78.1285;
       const operationalStatus = state === 'IN_TRANSIT' ? 'IN_TRANSIT' : 'IDLE';
