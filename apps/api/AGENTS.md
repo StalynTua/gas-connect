@@ -67,9 +67,21 @@ Run from `apps/api/`:
 - `pnpm test` — runs Vitest suite.
 - `pnpm lint` — checks types (`tsc --noEmit`).
 - `pnpm build` — compiles TypeScript (`prisma generate && tsc`).
+- `pnpm prisma:push` — synchronizes schema with PostgreSQL (`prisma db push`) and updates `@prisma/client`.
+- `pnpm prisma:seed` — seeds database with pilot fleet and distributors (`tsx prisma/seed.ts`).
+- `pnpm prisma:generate` — generates Prisma client types.
 
 Run from repo root:
-- `pnpm dev:api`, `pnpm test:api`.
+- `pnpm dev:api`, `pnpm test:api`, `pnpm prisma:push`, `pnpm prisma:seed`.
+
+## 🗄️ Database Schema Protocol (ADR-004)
+
+Never leave schema changes in `prisma/schema.prisma` without pushing to PostgreSQL:
+1. Edit `prisma/schema.prisma`.
+2. Execute `pnpm prisma:push` (from root or `apps/api`) to apply DDL to PostgreSQL immediately.
+3. Update infrastructure repositories in `src/modules/<context>/infrastructure/`.
+4. Update `prisma/seed.ts` if tables or test data changed, and run `pnpm prisma:seed`.
+5. Run `pnpm check:task` to ensure zero regressions.
 
 ## DDD Architecture Rules
 
@@ -84,3 +96,5 @@ Strictly enforced by [`../../.agents/rules/ddd-backend.md`](../../.agents/rules/
 
 - [`../../docs/decisions/ADR-001-monorepo-pnpm-coolify.md`](../../docs/decisions/ADR-001-monorepo-pnpm-coolify.md)
 - [`../../docs/decisions/ADR-002-decomposicion-modular-composition-root-app-server.md`](../../docs/decisions/ADR-002-decomposicion-modular-composition-root-app-server.md)
+- [`../../docs/decisions/ADR-003-autenticacion-cab-pwa-modulo-auth-backend.md`](../../docs/decisions/ADR-003-autenticacion-cab-pwa-modulo-auth-backend.md)
+- [`../../docs/decisions/ADR-004-sincronizacion-esquema-base-de-datos-prisma.md`](../../docs/decisions/ADR-004-sincronizacion-esquema-base-de-datos-prisma.md)

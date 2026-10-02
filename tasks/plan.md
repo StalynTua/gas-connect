@@ -202,6 +202,29 @@ GasConnect Ibarra es un sistema de coordinación y despacho oportuno de gas GLP 
 
 ---
 
+### Phase 9: Distributor Authentication & Cab Identity (`cab-auth`)
+
+- **Task 25: Implementación de Autenticación de Cabina y Módulo Auth Centralizado**
+  - **Description:** Implementar inicio/cierre de sesión para ayudantes de cabina en `cab-pwa` e identificación dinámica del camión asignado, con módulo de identidad desacoplado `auth` en `apps/api`. Emplea Argon2id para contraseñas de usuarios y SHA-256 para tokens de sesión en base de datos.
+  - **Acceptance:**
+    - `POST /api/v1/auth/login` valida placa y contraseña, retornando token opaco y detalles del camión.
+    - `POST /api/v1/auth/logout` revoca el token en BD.
+    - `cab-pwa` bloquea rutas operativas sin sesión activa, tolera fallos de red persistiendo sesión en `localStorage` y conecta Centrifugo con el token de sesión.
+    - Se elimina el `truckId` estático quemado en `cab-store.ts`.
+  - **Verification:** `pnpm --filter @gasconnect/api test` (54/54 en verde) y `pnpm --filter cab-pwa build`.
+  - **Dependencies:** Task 18, Task 21.
+  - **Files:** `apps/api/prisma/schema.prisma`, `apps/api/prisma/seed.ts`, `apps/api/src/modules/auth/**/*`, `apps/cab-pwa/src/application/auth-store.ts`, `apps/cab-pwa/src/presentation/components/LoginView.tsx`, `apps/cab-pwa/src/App.tsx`, `docs/decisions/ADR-003-autenticacion-cab-pwa-modulo-auth-backend.md`.
+  - **Scope:** M (11 files).
+
+#### Checkpoint 7: Fleet Authentication Certified
+- [x] Flota piloto autenticada con credenciales validadas con Argon2id.
+- [x] Tokens de sesión opacos protegidos en reposo con SHA-256.
+- [x] Interfaz de login y botón de logout funcionales en `cab-pwa`.
+- [x] ADR-003 documentado y registrado.
+
+---
+
+
 ## Risks and Mitigations
 | Riesgo | Impacto | Mitigación |
 | :--- | :--- | :--- |

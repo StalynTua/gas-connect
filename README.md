@@ -108,12 +108,17 @@ Esto levantará:
 - OSRM Ecuador (`localhost:5000`)
 - Evolution API (`localhost:8080`)
 
-#### Paso 4: Migrar la base de datos y cargar semilla de Ibarra
+#### Paso 4: Sincronizar la base de datos y cargar semilla de Ibarra
 ```bash
-npx prisma db push
-npm run prisma:seed
+# Sincroniza el esquema Prisma con PostgreSQL (crea/actualiza tablas y enums)
+pnpm prisma:push
+
+# Carga la flota piloto en Ibarra y cuentas de camión
+pnpm prisma:seed
 ```
 *Inserta el distribuidor piloto y 4 camiones con 40 cilindros cada uno en Los Ceibos, Caranqui, Centro Histórico y Yacucalle.*
+
+> 💡 **Nota de Sincronización:** Cada vez que agregues o modifiques un modelo en `apps/api/prisma/schema.prisma`, ejecuta siempre `pnpm prisma:push` antes de correr el servidor o los tests para evitar el error `P2021 (table does not exist)`. Consulta [ADR-004](docs/decisions/ADR-004-sincronizacion-esquema-base-de-datos-prisma.md) para más detalles.
 
 #### Paso 5: Ejecutar la suite de pruebas
 ```bash
@@ -239,9 +244,9 @@ cp .env.example .env
 # 3. Spin up Docker containers
 docker compose up -d
 
-# 4. Initialize PostGIS schema & seed pilot fleet in Ibarra
-npx prisma db push
-npm run prisma:seed
+# 4. Sync PostGIS schema & seed pilot fleet in Ibarra
+pnpm prisma:push
+pnpm prisma:seed
 
 # 5. Run test suite
 npm test

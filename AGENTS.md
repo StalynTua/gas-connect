@@ -36,6 +36,7 @@ Before writing or modifying code, identify the intent and apply the correspondin
 | **Endpoint or contract design/change** | `api-and-interface-design` | **Crucial:** Run `codegraph impact` to analyze impact on frontends. |
 | **Construction and implementation** | `incremental-implementation` + `test-driven-development` | Small vertical slices, TDD (Red-Green-Refactor), and commits of ~100 lines. |
 | **UI development (cab-pwa / ops-portal)** | `frontend-ui-engineering` | WCAG 2.1 AA accessibility, responsive layouts, and strict adherence to UI DDD layers. |
+| **Database schema change or extension** | `documentation-and-adrs` + `spec-driven-development` | Protocol: `pnpm prisma:push`, `pnpm prisma:generate`, and `pnpm prisma:seed` (see ADR-004). |
 | **Runtime bugs or failures** | `debugging-and-error-recovery` | 5-step triage (*reproduce → localize → reduce → fix → guard*). |
 | **Refactoring** | `code-simplification` | Respect *Chesterton's Fence*; do not refactor code without prior characterization tests. |
 | **Browser verification** | `browser-testing-with-devtools` | Verify DOM, polling, console, and network errors via Chrome DevTools MCP. |
@@ -62,6 +63,7 @@ Technical Spec ───▶   Atomic Tasks   ───▶  TDD + Slices    ─�
 | *"It's a simple API change, I don't need to check the frontends."* | **False.** A change in `apps/api` can break `cab-pwa` or `ops-portal`. Always run `codegraph impact`. |
 | *"I commented out this test or used `@ts-ignore` to move quickly."* | **Unacceptable.** If a test or type fails, stop the line (*Stop the Line*) and resolve the root cause. |
 | *"I'll write the code first and add tests afterwards."* | Violates TDD. Post-hoc tests bias towards the implemented code and mask subtle bugs. |
+| *"I modified schema.prisma and generated the client, no need to push to DB."* | **False (Error P2021).** Client types ≠ live database tables. Always run `pnpm prisma:push`. |
 | *"I'll clean up this old block of code that doesn't seem to be used."* | **Chesterton's Fence:** Understand and verify its role with CodeGraph before removing it. |
 | *"I put a fetch() inside the React component because it was just a button."* | Violates frontend DDD architecture. All HTTP calls belong in `infrastructure/`. |
 
@@ -73,8 +75,25 @@ No task is considered complete until verifying:
 - [ ] Strict type checking passed (`tsc --noEmit` in affected projects).
 - [ ] Absolute adherence to DDD layer rules (Backend and Frontends).
 - [ ] If a contract or endpoint was modified, cross-impact was verified with `codegraph impact`.
+- [ ] If database schema was modified, schema was pushed to PostgreSQL (`pnpm prisma:push`), client generated (`pnpm prisma:generate`), and seed validated (`pnpm prisma:seed`).
 - [ ] Zero `console.log` or residual debugging code (use Pino in backend).
 - [ ] Checkpoint recorded via a clean atomic Git commit.
+
+---
+
+## 🗄️ Database Schema & Synchronization Protocol (ADR-004)
+
+Whenever modifying or adding models, fields, relations, or enums in `apps/api/prisma/schema.prisma`:
+
+1. **Modify Schema:** Edit `apps/api/prisma/schema.prisma` with explicit snake_case mappings (`@map`, `@@map`).
+2. **Push to PostgreSQL (`pnpm prisma:push`):** Never rely solely on `prisma generate`. Live PostgreSQL tables must be created/updated with:
+   ```bash
+   pnpm prisma:push
+   ```
+   *Why:* GasConnect uses native PostGIS `Unsupported("geometry(Point, 4326)")` types and shares the PostgreSQL cluster with Evolution API. `pnpm prisma:push` (`prisma db push`) provides safe, direct DDL synchronization without migration table conflicts.
+3. **Adapt Repositories:** Update infrastructure repositories under `apps/api/src/modules/<context>/infrastructure/` to map between Prisma models and pure domain entities.
+4. **Seed Validation (`pnpm prisma:seed`):** Keep `apps/api/prisma/seed.ts` synchronized with any table cleanups or initial data inserts, and execute `pnpm prisma:seed`.
+5. **Quality Verification (`pnpm check:task`):** Run floor guards, DDD layer checks, typechecking, and the full test suite.
 
 ---
 

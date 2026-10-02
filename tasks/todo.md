@@ -201,5 +201,43 @@
   - **Files:** `CONSTRAINTS.md`, `scripts/floor-guard.mjs`, `scripts/check-ddd-boundaries.mjs`, `package.json`, `AGENTS.md`, `apps/*/AGENTS.md`
   - **Scope:** S
 
+---
+
+## Phase 9: Distributor Authentication & Cab Identity (`cab-auth`)
+- [x] **Task 25: Implementación de Autenticación de Cabina y Módulo Auth Centralizado**
+  - **Acceptance:**
+    - Backend: Bounded context `auth` en `apps/api/src/modules/auth/` estructurado en 4 capas DDD (`domain`, `application`, `infrastructure`, `presentation`). Modelos `Account` (con roles `TRUCK_HELPER`, `OPS_OPERATOR`, `CUSTOMER`) y `AccountSession` en Prisma. Hashing de contraseñas con Argon2id (OWASP 19 MB) y almacenamiento de tokens de sesión con SHA-256 en reposo (0.0006 ms/hash). Endpoints `POST /api/v1/auth/login` y `POST /api/v1/auth/logout`. Seed para 4 camiones piloto con contraseña `GasIbarra2025!`.
+    - Frontend: `cab-pwa` implementa `auth-store.ts` reactivo (`useSyncExternalStore`), adaptador `auth-storage.adapter.ts` (`localStorage`), y componente `LoginView.tsx`. Eliminación completa de `truckId` hardcodeado en `cab-store.ts`. Guard de rutas en `App.tsx` y botón de cierre de turno en `IdleView.tsx`.
+    - Registro de decisión de arquitectura en `docs/decisions/ADR-003-autenticacion-cab-pwa-modulo-auth-backend.md`.
+  - **Verify:** `pnpm --filter @gasconnect/api test` (54/54 tests en verde), `pnpm --filter @gasconnect/api build`, `pnpm --filter cab-pwa build` limpios sin errores.
+  - **Files:** `apps/api/prisma/schema.prisma`, `apps/api/prisma/seed.ts`, `apps/api/src/modules/auth/**/*`, `apps/cab-pwa/src/application/auth-store.ts`, `apps/cab-pwa/src/presentation/components/LoginView.tsx`, `apps/cab-pwa/src/App.tsx`, `docs/decisions/ADR-003-autenticacion-cab-pwa-modulo-auth-backend.md`
+  - **Scope:** M
+
+### Checkpoint 7: Autenticación de Flota y Control de Cabina Certificado
+- [x] Flota piloto autenticable mediante placa y contraseña personal con feedback claro de error en caso inválido.
+- [x] Sesión permanente tolerante a fallos de red persistida en `localStorage` con preservación del estado operativo al recargar.
+- [x] Guard de renderizado en `cab-pwa` que bloquea todas las rutas y vistas operativas sin sesión activa.
+- [x] Logout manual operativo con revocación de token y reseteo de UI.
+- [x] Hashing de contraseñas con Argon2id y defensa en profundidad con SHA-256 sub-milisegundo para tokens en base de datos.
+- [x] ADR-003 documentado y registrado formalmente.
+
+---
+
+## 📋 Backlog / Próximos Desarrollos (Ver `tasks/backlog.md`)
+
+- [ ] **Task 26: Autenticación y Control de Acceso en Ops Portal (`ops-auth`)**
+  - **Description:** Implementar inicio de sesión administrativo para despachadores y operadores de bodega en `ops-portal`. Guard de rutas que bloquee la vista del mapa de flota en vivo y métricas si no hay sesión activa.
+  - **Scope:** M (`apps/ops-portal`, `apps/api`)
+
+- [ ] **Task 27: Gestión y Restablecimiento de Credenciales de Camiones desde Ops Portal**
+  - **Description:** Endpoint administrativo (`POST /api/v1/fleet/trucks/:id/password`) y modal en `ops-portal` para que el despachador asigne la clave inicial al registrar un camión, la restablezca ante olvidos y revoque sesiones activas anteriores.
+  - **Scope:** M (`apps/api`, `apps/ops-portal`)
+
+- [ ] **Task 28: Autenticación e Identidad para PWA Ciudadana (`customer-pwa`)**
+  - **Description:** Registro y acceso de clientes mediante número verificado (OTP WhatsApp / Evolution API) bajo el rol `CUSTOMER` del módulo `auth`.
+  - **Scope:** L (`apps/customer-pwa`, `apps/api`)
+
+
+
 
 
