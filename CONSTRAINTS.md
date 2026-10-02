@@ -38,7 +38,7 @@ Every row names the command that produces the verdict. A dimension with a number
 | Metric | Today | Direction | Rationale |
 |--------|-------|-----------|-----------|
 | Unit & Integration Tests | 40 passed | must not fall | Prevents regression or test suite thinning |
-| Coverage on changed lines | Adopción activa (warn) | ≥ 80% on new/modified lines | Incremental coverage adoption without blocking ongoing delivery |
+| Coverage on changed lines | Active adoption (warn) | ≥ 80% on new/modified lines | Incremental coverage adoption without blocking ongoing delivery |
 | cab-pwa bundle size | 251.82 kB (73.15 kB gzip) | must not grow (budget ≤ 300 kB) | Prevents dependency and bundle bloat on mobile |
 | ops-portal bundle size | 416.06 kB (120.89 kB gzip) | must not grow (budget ≤ 500 kB) | Keeps operational panel lightweight and responsive |
 
@@ -46,4 +46,4 @@ Every row names the command that produces the verdict. A dimension with a number
 
 | ID | Rule | Path | Reason | Owner | Expires |
 |----|------|------|--------|-------|---------|
-| - | Ninguna excepción activa | - | El repositorio opera al 100% de cumplimiento sin excepciones | - | - |
+| - | None active | - | Repository operates at 100% compliance with zero exceptions | - | - |

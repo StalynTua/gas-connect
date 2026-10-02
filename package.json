@@ -2,7 +2,7 @@
   "name": "gasconnect-monorepo",
   "version": "0.1.0",
   "private": true,
-  "description": "Sistema Monorepositorio de Coordinación y Despacho Oportuno de GLP en Ibarra",
+  "description": "Monorepo system for coordinated and opportunistic LPG dispatch in Ibarra",
   "packageManager": "pnpm@9.15.0",
   "scripts": {
     "build": "turbo run build 2>/dev/null || pnpm -r run build",

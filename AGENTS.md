@@ -20,61 +20,61 @@ Read [CONSTRAINTS.md](CONSTRAINTS.md) before writing code. Do not weaken it to m
 
 ## 🏛️ Governance & Skill-Driven Engineering (`agent-skills`)
 
-Este repositorio opera bajo un modelo guiado por skills de ingeniería de grado de producción (`agent-skills`). La calidad, la verificación empírica y la arquitectura DDD son prioritarias sobre la velocidad.
+This repository operates under a production-grade engineering skill model (`agent-skills`). Quality, empirical verification, and DDD architecture take precedence over speed.
 
-Antigravity y los agentes de codificación deben seguir este ciclo de vida de forma no negociable:
+Antigravity and coding agents must follow this lifecycle in a non-negotiable manner:
 
 ### 1. Intent → Skill Mapping
 
-Antes de escribir o modificar código, identifica la intención y aplica la skill correspondiente:
+Before writing or modifying code, identify the intent and apply the corresponding skill:
 
-| Intención / Tarea | Skill Obligatoria | Protocolo en este Monorepo |
+| Intent / Task | Mandatory Skill | Monorepo Protocol |
 |---|---|---|
-| **Nueva funcionalidad o cambio arquitectónico** | `spec-driven-development` | Escribir spec técnica o actualizar `tasks/plan.md` antes de codificar. |
-| **Requerimientos ambiguos o diseño abierto** | `interview-me` | Preguntas una a una hasta alcanzar 95% de certeza. |
-| **Desglose de tareas** | `planning-and-task-breakdown` | Tareas atómicas registradas en `tasks/todo.md`. |
-| **Diseño/cambio de endpoints o contratos** | `api-and-interface-design` | **Crucial:** Correr `codegraph impact` para analizar afectación en frontends. |
-| **Construcción e implementación** | `incremental-implementation` + `test-driven-development` | Slices verticales pequeños, TDD (Red-Green-Refactor) y commits de ~100 líneas. |
-| **Desarrollo de UI (cab-pwa / ops-portal)** | `frontend-ui-engineering` | Accesibilidad WCAG 2.1 AA, layouts responsive y respeto estricto a las capas DDD de UI. |
-| **Bugs o fallos en ejecución** | `debugging-and-error-recovery` | Triage de 5 pasos (*reproduce → localize → reduce → fix → guard*). |
-| **Refactorización** | `code-simplification` | Respetar *Chesterton's Fence*; no refactorizar código sin tests de caracterización previos. |
-| **Validación en navegador** | `browser-testing-with-devtools` | Verificar DOM, polling, errores de consola y red con Chrome DevTools MCP. |
-| **Previo a Merge / Pull Request** | `code-review-and-quality` | Auditoría en 5 dimensiones (corrección, legibilidad, arquitectura, seguridad, performance). |
+| **New feature or architectural change** | `spec-driven-development` | Write technical spec or update `tasks/plan.md` before coding. |
+| **Ambiguous requirements or open-ended design** | `interview-me` | Ask questions one by one until reaching 95% confidence. |
+| **Task breakdown** | `planning-and-task-breakdown` | Atomic tasks recorded in `tasks/todo.md`. |
+| **Endpoint or contract design/change** | `api-and-interface-design` | **Crucial:** Run `codegraph impact` to analyze impact on frontends. |
+| **Construction and implementation** | `incremental-implementation` + `test-driven-development` | Small vertical slices, TDD (Red-Green-Refactor), and commits of ~100 lines. |
+| **UI development (cab-pwa / ops-portal)** | `frontend-ui-engineering` | WCAG 2.1 AA accessibility, responsive layouts, and strict adherence to UI DDD layers. |
+| **Runtime bugs or failures** | `debugging-and-error-recovery` | 5-step triage (*reproduce → localize → reduce → fix → guard*). |
+| **Refactoring** | `code-simplification` | Respect *Chesterton's Fence*; do not refactor code without prior characterization tests. |
+| **Browser verification** | `browser-testing-with-devtools` | Verify DOM, polling, console, and network errors via Chrome DevTools MCP. |
+| **Prior to Merge / Pull Request** | `code-review-and-quality` | 5-axis audit (correctness, readability, architecture, security, performance). |
 
-### 2. Ciclo de Vida: The Golden Path
+### 2. Lifecycle: The Golden Path
 
 ```
  [1. DEFINE]           [2. PLAN]             [3. BUILD]            [4. VERIFY]          [5. REVIEW]
-Spec Técnica   ───▶ Tareas Atómicas  ───▶  TDD + Slices    ───▶  Pruebas Reales  ───▶  5-Axis Review
- (tasks/plan)         (tasks/todo)         (~100 líneas)        (Vitest/tsc/MCP)        Pre-merge
+Technical Spec ───▶   Atomic Tasks   ───▶  TDD + Slices    ───▶  Real Tests     ───▶  5-Axis Review
+ (tasks/plan)         (tasks/todo)         (~100 lines)         (Vitest/tsc/MCP)        Pre-merge
 ```
 
-1. **DEFINE:** No implementes cambios que afecten más de un archivo sin especificar objetivos, límites y contratos.
-2. **PLAN:** Descompón la solución en tareas pequeñas ordenadas por dependencias en `tasks/todo.md`.
-3. **BUILD:** Aplica TDD: escribe primero la prueba que falle, luego el código mínimo necesario y luego refactoriza.
-4. **VERIFY:** Comprueba con comandos reales (`pnpm test`, `pnpm lint`, `pnpm build`). "Parece correcto" nunca es suficiente.
-5. **REVIEW:** Audita el cambio contra el *Definition of Done* y las reglas DDD antes de darlo por cerrado.
+1. **DEFINE:** Do not implement changes affecting more than one file without specifying objectives, boundaries, and contracts.
+2. **PLAN:** Decompose the solution into small tasks ordered by dependencies in `tasks/todo.md`.
+3. **BUILD:** Apply TDD: first write the failing test, then write the minimal necessary code, and refactor.
+4. **VERIFY:** Verify using real commands (`pnpm test`, `pnpm lint`, `pnpm build`). "Looks right" is never enough.
+5. **REVIEW:** Audit the change against the *Definition of Done* and DDD rules before considering it complete.
 
-### 3. Anti-Racionalizaciones (Destrucción de Atajos)
+### 3. Anti-Rationalizations (Shortcut Destruction)
 
-| Excusa típica de la IA | Realidad Técnica en GasConnect |
+| Typical AI Excuse | Technical Reality in GasConnect |
 |---|---|
-| *"Es un cambio simple en la API, no necesito revisar los frontends."* | **Falso.** Un cambio en `apps/api` puede romper `cab-pwa` o `ops-portal`. Ejecuta siempre `codegraph impact`. |
-| *"Comenté este test o usé `@ts-ignore` para avanzar rápido."* | **Inaceptable.** Si un test o tipo falla, detén la línea (*Stop the Line*) y resuelve la causa raíz. |
-| *"Primero escribo el código y luego agregaré los tests."* | Viola TDD. El test a posteriori se sesga hacia el código implementado y enmascara bugs sutiles. |
-| *"Voy a limpiar este bloque de código antiguo que no parece usarse."* | **Chesterton's Fence:** Entiende y verifica con CodeGraph su función antes de eliminarlo. |
-| *"Puse un fetch() dentro del componente React porque era solo un botón."* | Viola la arquitectura DDD del frontend. Toda llamada HTTP pertenece a `infrastructure/`. |
+| *"It's a simple API change, I don't need to check the frontends."* | **False.** A change in `apps/api` can break `cab-pwa` or `ops-portal`. Always run `codegraph impact`. |
+| *"I commented out this test or used `@ts-ignore` to move quickly."* | **Unacceptable.** If a test or type fails, stop the line (*Stop the Line*) and resolve the root cause. |
+| *"I'll write the code first and add tests afterwards."* | Violates TDD. Post-hoc tests bias towards the implemented code and mask subtle bugs. |
+| *"I'll clean up this old block of code that doesn't seem to be used."* | **Chesterton's Fence:** Understand and verify its role with CodeGraph before removing it. |
+| *"I put a fetch() inside the React component because it was just a button."* | Violates frontend DDD architecture. All HTTP calls belong in `infrastructure/`. |
 
 ### 4. Monorepo Definition of Done (DoD)
 
-Ninguna tarea se considera terminada hasta validar:
-- [ ] Criterios de aceptación cumplidos según `tasks/plan.md`.
-- [ ] Cobertura con tests unitarios/integración en verde (sin regresiones en `pnpm test`).
-- [ ] Chequeo estricto de tipos superado (`tsc --noEmit` en los proyectos afectados).
-- [ ] Respeto absoluto a las reglas de capas DDD (Backend y Frontends).
-- [ ] Si se modificó un contrato o endpoint, se validó el impacto cruzado con `codegraph impact`.
-- [ ] Cero `console.log` o código de depuración residual (usar Pino en backend).
-- [ ] Checkpoint registrado mediante commit atómico limpio en Git.
+No task is considered complete until verifying:
+- [ ] Acceptance criteria met according to `tasks/plan.md`.
+- [ ] Test coverage with green unit/integration tests (zero regressions in `pnpm test`).
+- [ ] Strict type checking passed (`tsc --noEmit` in affected projects).
+- [ ] Absolute adherence to DDD layer rules (Backend and Frontends).
+- [ ] If a contract or endpoint was modified, cross-impact was verified with `codegraph impact`.
+- [ ] Zero `console.log` or residual debugging code (use Pino in backend).
+- [ ] Checkpoint recorded via a clean atomic Git commit.
 
 ---
 

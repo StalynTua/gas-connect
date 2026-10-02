@@ -1,43 +1,44 @@
 # AGENTS.md — ops-portal
 
-> Sub-documento de [`../../AGENTS.md`](../../AGENTS.md). Lee primero el AGENTS.md raíz para la visión global del monorepo GasConnect Ibarra y las dependencias cruzadas entre los 3 proyectos.
+> Sub-document of [`../../AGENTS.md`](../../AGENTS.md). Read the root AGENTS.md first for the global monorepo overview and cross-dependencies between the 3 projects.
 > Read [CONSTRAINTS.md](../../CONSTRAINTS.md) before writing code. Do not weaken it to make a change pass.
 
-## Propósito
+## Purpose
 
-Panel de operaciones (dashboard) para el equipo de despacho: muestra en tiempo (casi) real el estado de la flota de camiones de gas en un mapa, métricas operativas (KPIs), el estado de la conexión de WhatsApp/Evolution API, y un log de eventos de actividad (pedidos, despachos aceptados, alertas de stock bajo). No expone lógica de negocio propia: consume y visualiza datos que produce el backend.
+Operations panel (dashboard) for the dispatch team: displays near real-time fleet status of gas trucks on a map, operational metrics (KPIs), WhatsApp/Evolution API connection state, and an activity event log (orders, accepted dispatches, low stock alerts). It does not contain its own business logic: it consumes and visualizes data produced by the backend.
 
 ## Skill-Driven Specialization (`agent-skills`)
 
-Hereda el ciclo de vida y la constitución metodológica de [`../../AGENTS.md`](../../AGENTS.md). En este subproyecto aplican con especial rigor:
+Inherits the lifecycle and methodological constitution of [`../../AGENTS.md`](../../AGENTS.md). In this subproject, the following apply with particular rigor:
 
-- **Optimización y Renderizado:** Invoca `performance-optimization` para evitar re-renderizados costosos de Leaflet durante el ciclo de polling de 5 segundos.
-- **Frontend & UI Engineering:** Invoca `frontend-ui-engineering` para la jerarquía visual de métricas, estados de los camiones y feed de eventos.
-- **Pruebas en Navegador:** Invoca `browser-testing-with-devtools` para monitorear el consumo de red del polling HTTP y verificar la correcta visualización de pines en el mapa.
-- **Verificación de Compilación y Tipos:** `pnpm build` (`tsc && vite build`).
-- **Arquitectura DDD de UI:** `App.tsx` debe limitarse a orquestar; el polling reside en `application/useFleetData.ts` y las llamadas HTTP en `infrastructure/fleet-api.client.ts`.
+- **Optimization & Rendering:** Invoke `performance-optimization` to prevent costly Leaflet re-renders during state and real-time updates.
+- **Frontend & UI Engineering:** Invoke `frontend-ui-engineering` for the visual hierarchy of metrics, truck statuses, and the event feed.
+- **Browser Testing:** Invoke `browser-testing-with-devtools` to monitor network consumption and verify accurate marker placement on the map.
+- **Build and Type Verification:** `pnpm build` (`tsc && vite build`).
+- **UI DDD Architecture:** `App.tsx` must strictly orchestrate; data management resides in `application/useFleetDashboard.ts` and HTTP calls in `infrastructure/fleet-api.client.ts`.
 
-## Stack y versiones
+## Stack and Versions
 
-Verificado en `apps/ops-portal/package.json`:
+Verified in `apps/ops-portal/package.json`:
 
 - Vite 5.4.10
 - React 18.3.1 + react-dom 18.3.1
 - TypeScript 5.6.3 (`strict: true`)
 - Tailwind CSS 3.4.15
-- Leaflet 1.9.4 + `@types/leaflet` 1.9.22 (mapa de flota)
-- `centrifuge` 5.2.2 — presente como dependencia instalada en `package.json`, pero **no hay uso confirmado en `src/App.tsx`**: el indicador "Centrifugo v5: Conectado" del header es una etiqueta estática de UI, no el resultado de una suscripción realtime activa. No asumas que hay un cliente Centrifugo wireado sin verificarlo en el código antes de documentarlo como tal.
-- `lucide-react`, `clsx`, `tailwind-merge` como utilidades de UI.
-- Scripts disponibles: `dev`, `build` (`tsc && vite build`), `preview`. No hay scripts `test` ni `lint`.
+- Leaflet 1.9.4 + `@types/leaflet` 1.9.22 (fleet map)
+- `centrifuge` 5.2.2 (real-time coordination with backend)
+- `lucide-react`, `clsx`, `tailwind-merge` as UI utilities.
+- Available scripts: `dev`, `build` (`tsc && vite build`), `preview`. No `test` or `lint` scripts.
 
-## Arquitectura
+## Architecture
 
-- `src/App.tsx` es el único componente con estado: mantiene `trucks`, `metrics`, `events` y `selectedTruckId` en `useState`, y hace **polling HTTP por `fetch`** (no WebSocket/Centrifugo) cada 5s vía `setInterval` a tres endpoints REST del backend.
-- Si una petición falla o no devuelve datos, el estado permanece en (o cae de vuelta a) los datos iniciales hardcodeados (`INITIAL_TRUCKS`, `INITIAL_EVENTS`), que sirven de fallback visual/demo.
-- El renderizado es un árbol simple: `App` → `WhatsAppStatusCard`, `MetricsCards`, `LiveFleetMap` + `TrucksList` (selección de camión compartida vía `selectedTruckId`), `ActivityLog`.
-- No hay routing, no hay store global externo (Zustand no está entre las dependencias de este subproyecto), y no hay lógica de negocio: los componentes son presentacionales y reciben datos por props desde `App.tsx`.
+- `src/App.tsx`: main presentation and layout orchestrator. Coordinates views, consumes `useFleetDashboard`, and passes data to presentational components.
+- State and hooks live in `src/application/`: `useFleetDashboard.ts` and `useWhatsAppStatus.ts`.
+- Infrastructure clients in `src/infrastructure/`: `fleet-api.client.ts`, `centrifugo.adapter.ts`, `whatsapp-api.client.ts`.
+- Component tree: `App` → `WhatsAppStatusCard`, `MetricsCards`, `LiveFleetMap` + `TrucksList` (shared truck selection via `selectedTruckId`), `ActivityLog`.
+- Components are strictly presentational and receive data through props.
 
-## Estructura de directorios
+## Directory Structure
 
 ```
 apps/ops-portal/
@@ -48,72 +49,72 @@ apps/ops-portal/
 ├── tsconfig.json
 └── src/
     ├── main.tsx
-    ├── App.tsx                     # estado + polling + layout
+    ├── App.tsx
     ├── index.css
-    └── components/
-        ├── LiveFleetMap.tsx        # mapa Leaflet con pines de camiones
-        ├── TrucksList.tsx          # lista lateral de camiones
-        ├── MetricsCards.tsx        # tarjetas de KPIs
-        ├── ActivityLog.tsx         # feed de eventos
-        └── WhatsAppStatusCard.tsx  # estado de Evolution API / QR
+    ├── domain/
+    ├── application/
+    ├── infrastructure/
+    └── presentation/
+        └── components/
+            ├── LiveFleetMap.tsx
+            ├── TrucksList.tsx
+            ├── MetricsCards.tsx
+            ├── ActivityLog.tsx
+            └── WhatsAppStatusCard.tsx
 ```
 
-## Mapa inicial del código (CodeGraph)
+## Initial Code Map (CodeGraph)
 
-Obtenido con `codegraph explore "cabStore App.tsx LiveFleetMap MetricsCards WhatsAppStatusCard"` (ejecutado desde la raíz sobre el índice único) durante el discovery inicial, y confirmado por lectura directa de `src/App.tsx` en este step:
+Verified with `codegraph explore "App.tsx LiveFleetMap MetricsCards WhatsAppStatusCard ActivityLog TrucksList"`:
 
-- `App.tsx` → `fetchFleetData()`: hace `Promise.all` de `fetch('/api/v1/fleet/status')`, `fetch('/api/v1/fleet/metrics')`, `fetch('/api/v1/fleet/events')`; se llama una vez al montar y luego cada **5000ms** vía `setInterval` (confirmado en línea, no solo por CodeGraph).
-- `TruckPin` (tipo exportado por `LiveFleetMap.tsx`) es la forma de dato que consume tanto el mapa como `TrucksList.tsx`.
-- `ActivityEvent` (tipo exportado por `ActivityLog.tsx`) es la forma de dato del feed de eventos.
-- `WhatsAppStatusCard.tsx` no recibe props del polling anterior; gestiona su propio estado de vínculo con Evolution API (verificar su código si se va a modificar el flujo de WhatsApp).
+- `App.tsx` coordinates `useFleetDashboard()` and views.
+- `TruckPin` (exported from `domain/fleet-dashboard.types.ts`) is the data structure consumed by both the map and `TrucksList.tsx`.
+- `ActivityEvent` (exported from `domain/fleet-dashboard.types.ts`) is the event feed data structure.
+- `WhatsAppStatusCard.tsx` consumes status from `useWhatsAppStatus()`.
 
-Para re-explorar cualquiera de estos símbolos tras cambios: `codegraph explore "App.tsx fetchFleetData LiveFleetMap TrucksList ActivityLog WhatsAppStatusCard"` desde la raíz.
+## Commands
 
-## Comandos
+Run from the monorepo root:
+- `pnpm --filter ops-portal dev` — Vite dev server.
+- `pnpm --filter ops-portal build` — `tsc && vite build` (type checking + production build, budget ≤ 500 kB).
+- `pnpm --filter ops-portal preview` — preview the production build locally.
 
-Ejecutar desde la raíz del monorepo:
-- `pnpm --filter ops-portal dev` — servidor de desarrollo Vite.
-- `pnpm --filter ops-portal build` — `tsc && vite build` (chequeo de tipos + build de producción, presupuesto ≤ 500 kB).
-- `pnpm --filter ops-portal preview` — sirve el build de producción localmente.
-
-O ejecutar desde `apps/ops-portal/`:
+Or run from `apps/ops-portal/`:
 - `pnpm dev`, `pnpm build`, `pnpm preview`.
 
-**Testing y Verificación:**
-- La verificación mínima automatizada es `pnpm build` (`tsc && vite build`), que garantiza cero errores de TypeScript y cumplimiento del presupuesto de bundle.
-- La lógica de transformación y hooks en `domain/` y `application/` debe mantenerse pura y desacoplada para facilitar tests unitarios.
-- **Dependencias:** Nunca ejecutes `npm install`. Instala siempre desde la raíz con `pnpm --filter ops-portal add <paquete>`.
+**Testing and Verification:**
+- Minimal automated verification is `pnpm build` (`tsc && vite build`), guaranteeing zero TypeScript errors and bundle budget compliance.
+- Hook and transformation logic in `domain/` and `application/` should remain pure and decoupled.
+- **Dependencies:** Never run `npm install`. Always install from root with `pnpm --filter ops-portal add <package>`.
 
-## Convenciones de código (Alineadas con DDD)
+## Code Conventions (Aligned with DDD)
 
-- TypeScript estricto (`strict: true`), consistente con todo el monorepo.
-- Respeto riguroso a la arquitectura DDD en 4 capas (ver sección inferior):
-  - Los tipos de dominio (`TruckPin`, `ActivityEvent`, `FleetMetrics`) viven exclusivamente en `src/domain/fleet-dashboard.types.ts`.
-  - La lógica de polling y estado reactivo vive en hooks dentro de `src/application/` (`useFleetData.ts`).
-  - Las peticiones HTTP viven en `src/infrastructure/` (`fleet-api.client.ts`, `whatsapp-api.client.ts`).
-  - `App.tsx` y componentes de `src/presentation/` se mantienen presentacionales (props in, callbacks out, cero llamadas `fetch()` directas).
-- Tailwind para estilos, con utilidades `clsx`/`tailwind-merge`.
+- Strict TypeScript (`strict: true`), consistent with the entire monorepo.
+- Strict adherence to the 4-layer DDD architecture (see section below):
+  - Domain types (`TruckPin`, `ActivityEvent`, `FleetMetrics`) live exclusively in `src/domain/fleet-dashboard.types.ts`.
+  - State and hooks live in `src/application/`.
+  - HTTP and WebSocket requests live in `src/infrastructure/`.
+  - `App.tsx` and presentation components remain purely presentational (props in, callbacks out, zero direct `fetch()` calls).
+- Tailwind CSS for styling, using `clsx`/`tailwind-merge` utilities.
 
-## Exploración con CodeGraph
+## Exploring with CodeGraph
 
-Se utiliza el índice único ubicado en la raíz (`.codegraph/`). Consulta [`../../AGENTS.md`](../../AGENTS.md) para la lista completa de comandos de la CLI.
+Uses the single index located at root (`.codegraph/`). See [`../../AGENTS.md`](../../AGENTS.md) for the full CLI command reference.
 
-Consultas específicas de este subproyecto:
-- `codegraph explore "App.tsx fetchFleetData LiveFleetMap MetricsCards WhatsAppStatusCard ActivityLog TrucksList"` — mapea el flujo de polling y el árbol de componentes.
-- `codegraph callers <símbolo de fleet.controller>` — evalúa si un cambio en `fleet.controller.ts` afecta los endpoints de este dashboard.
-- `codegraph impact src/modules/fleet/fleet.controller.ts` — antes de modificar `fleet/status|metrics|events` en backend, confirma que ops-portal está protegido.
+Subproject-specific queries:
+- `codegraph explore "App.tsx useFleetDashboard LiveFleetMap MetricsCards WhatsAppStatusCard ActivityLog TrucksList"`
+- `codegraph impact src/modules/fleet/presentation/fleet.controller.ts` — verify ops-portal contracts before changing backend endpoints.
 
-## Contexto de tareas (`tasks/`)
+## Task Context (`tasks/`)
 
-Este subproyecto no tiene un directorio de tareas independiente. Las tareas se gestionan de forma centralizada en `tasks/plan.md` y `tasks/todo.md` en la raíz del repositorio.
+This subproject does not maintain an independent tasks directory. Tasks are managed centrally in `tasks/plan.md` and `tasks/todo.md` at the repository root.
 
-## Reglas para agentes
+## Rules for Agents
 
-- No tocar `dist/` ni `node_modules/` de este subproyecto; son artefactos generados.
-- Gestor de paquetes: Este monorepo usa **`pnpm`**. Nunca ejecutes `npm install` dentro de este subdirectorio.
-- Este subproyecto depende estrictamente de los contratos REST del backend expuestos por el módulo `fleet` (`GET /api/v1/fleet/status`, `/fleet/metrics`, `/fleet/events`) y, para el estado de WhatsApp, del módulo `whatsapp`. Cualquier cambio en la forma de respuesta de esos endpoints en el backend rompe silenciosamente este dashboard (hay fallback a datos mock, así que los errores pueden no ser visibles de inmediato) — verifica el impacto con `codegraph impact` antes de mergear cambios del backend.
-- No describas ni implementes una integración Centrifugo/WebSocket activa en este subproyecto basándote en el indicador visual del header: es una etiqueta estática hasta que el código muestre lo contrario. Si se implementa realtime real, actualiza esta sección y la de Arquitectura.
-- No introduzcas Zustand ni otro store global sin verificar antes que sigue siendo verdad que `App.tsx` no lo usa.
+- Do not modify `dist/` or `node_modules/` in this subproject; they are generated artifacts.
+- Package manager: This monorepo uses **`pnpm`**. Never execute `npm install`.
+- This subproject depends strictly on backend REST and real-time contracts from the `fleet` and `whatsapp` modules. Verify cross-project impact with `codegraph impact` before merging backend changes.
+- Do not introduce Zustand or another global store without verifying architecture alignment.
 
 ---
 

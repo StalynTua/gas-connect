@@ -192,10 +192,10 @@ GasConnect Ibarra es un sistema de coordinación y despacho oportuno de gas GLP 
 
 ### Phase 8: Quality Gates & Constraint-Driven Development (`quality-constraints`)
 
-- **Task 24: Formalización de Estándares en CONSTRAINTS.md y Automatización de Quality Gates**
-  - **Description:** Establecer un contrato explícito de calidad cuantitativa para evitar regresiones silenciosas por agentes y colaboradores. Integrar la verificación del Floor (diff-scoped), límites arquitectónicos DDD, tipado TypeScript estricto y ratchets de no-regresión.
-  - **Acceptance:** `CONSTRAINTS.md` activo en la raíz del repositorio; comandos `pnpm check:fast` (< 5s) y `pnpm check:task` (< 90s) configurados y pasando en verde.
-  - **Verification:** `pnpm check:fast && pnpm check:task` finalizan sin advertencias ni errores.
+- **Task 24: Formalization of Standards in CONSTRAINTS.md and Quality Gates Automation**
+  - **Description:** Establish an explicit quantitative quality contract to prevent silent regressions by agents and collaborators. Integrate Floor verification (diff-scoped), DDD architectural boundaries, strict TypeScript typing, and non-regression ratchets.
+  - **Acceptance:** Active `CONSTRAINTS.md` at repository root; `pnpm check:fast` (< 5s) and `pnpm check:task` (< 90s) configured and passing green.
+  - **Verification:** `pnpm check:fast && pnpm check:task` complete without warnings or errors.
   - **Dependencies:** Task 21, Task 22, Task 23.
   - **Files:** `CONSTRAINTS.md`, `scripts/floor-guard.mjs`, `scripts/check-ddd-boundaries.mjs`, `package.json`, `AGENTS.md`.
   - **Scope:** S (5 files).

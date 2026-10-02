@@ -9,13 +9,13 @@ Fastify monolith that receives gas orders via WhatsApp (Evolution API), determin
 
 ## Skill-Driven Specialization (`agent-skills`)
 
-Hereda el ciclo de vida y la constitución metodológica de [`../../AGENTS.md`](../../AGENTS.md). En este subproyecto aplican con especial rigor:
+Inherits the lifecycle and methodological constitution of [`../../AGENTS.md`](../../AGENTS.md). In this subproject, the following apply with particular rigor:
 
-- **Contratos & Endpoints:** Al modificar rutas o DTOs en `modules/`, invoca obligatoriamente `api-and-interface-design` y ejecuta `codegraph impact <archivo>` desde la raíz para verificar que no se rompan `cab-pwa` ni `ops-portal`.
-- **Testing & TDD:** `pnpm test` (suite de Vitest). Todo caso de uso nuevo o bug fix requiere TDD estricto (`test-driven-development` con ciclo Red-Green-Refactor).
-- **Verificación de Tipos:** `pnpm lint` (`tsc --noEmit`).
-- **Arquitectura DDD:** Validación contra [`../../.agents/rules/ddd-backend.md`](../../.agents/rules/ddd-backend.md) (dominio puro, Prisma confinado a infraestructura).
-- **Auditoría Pre-Merge:** Invocar `code-review-and-quality` enfocado en concurrencia y transacciones de base de datos.
+- **Contracts & Endpoints:** When modifying routes or DTOs in `modules/`, invoke `api-and-interface-design` and run `codegraph impact <file>` from the root to ensure neither `cab-pwa` nor `ops-portal` are broken.
+- **Testing & TDD:** `pnpm test` (Vitest suite). Every new use case or bug fix strictly requires TDD (`test-driven-development` with a Red-Green-Refactor cycle).
+- **Type Verification:** `pnpm lint` (`tsc --noEmit`).
+- **DDD Architecture:** Validation against [`../../.agents/rules/ddd-backend.md`](../../.agents/rules/ddd-backend.md) (pure domain, Prisma strictly confined to infrastructure).
+- **Pre-Merge Audit:** Invoke `code-review-and-quality` focused on concurrency and database transactions.
 
 ## Stack and Versions
 

@@ -195,10 +195,10 @@
 ---
 
 ## Phase 8: Quality Gates & Constraint-Driven Development (`quality-constraints`)
-- [x] **Task 24: Formalización de Estándares en CONSTRAINTS.md y Automatización de Quality Gates**
-  - **Acceptance:** `CONSTRAINTS.md` define línea base no negociable (Floor), reglas cuantitativas de TypeScript, límites de capas DDD (`apps/api`, `cab-pwa`, `ops-portal`), presupuestos de bundle y ratchets de no-regresión. Scripts `scripts/floor-guard.mjs` y `scripts/check-ddd-boundaries.mjs` integrados en scripts de `package.json` (`check:fast`, `check:task`, `check:full`). Directiva obligatoria documentada en todos los `AGENTS.md`.
-  - **Verify:** `pnpm check:fast && pnpm check:task` completan en verde en < 5s.
-  - **Files:** `CONSTRAINTS.md`, `scripts/floor-guard.mjs`, `scripts/check-ddd-boundaries.mjs`, `package.json`, `AGENTS.md`, `AGENTS-backend.md`, `apps/*/AGENTS.md`
+- [x] **Task 24: Formalization of Standards in CONSTRAINTS.md and Quality Gates Automation**
+  - **Acceptance:** `CONSTRAINTS.md` defines non-negotiable baseline (Floor), quantitative TypeScript rules, DDD layer boundaries (`apps/api`, `cab-pwa`, `ops-portal`), bundle budgets, and non-regression ratchets. `scripts/floor-guard.mjs` and `scripts/check-ddd-boundaries.mjs` integrated into `package.json` scripts (`check:fast`, `check:task`, `check:full`). Mandatory directive documented across all `AGENTS.md`.
+  - **Verify:** `pnpm check:fast && pnpm check:task` complete green in < 5s.
+  - **Files:** `CONSTRAINTS.md`, `scripts/floor-guard.mjs`, `scripts/check-ddd-boundaries.mjs`, `package.json`, `AGENTS.md`, `apps/*/AGENTS.md`
   - **Scope:** S
 
 

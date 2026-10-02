@@ -9,12 +9,12 @@ Cabin PWA for the truck assistant. Receives dispatch offers in real time, alerts
 
 ## Skill-Driven Specialization (`agent-skills`)
 
-Hereda el ciclo de vida y la constitución metodológica de [`../../AGENTS.md`](../../AGENTS.md). En este subproyecto aplican con especial rigor:
+Inherits the lifecycle and methodological constitution of [`../../AGENTS.md`](../../AGENTS.md). In this subproject, the following apply with particular rigor:
 
-- **Frontend & Accesibilidad Móvil:** Invoca obligatoriamente `frontend-ui-engineering` (WCAG 2.1 AA, contraste alto para luz diurna en cabina, zonas táctiles grandes y diseño 100% responsivo para smartphone/tablet).
-- **Pruebas en Navegador & APIs Web:** Invoca `browser-testing-with-devtools` para verificar el ciclo de vida de la PWA, Wake Lock API, Audio Alarm y llamadas a la API de geolocalización.
-- **Verificación de Compilación y Tipos:** `pnpm build` (`tsc && vite build`).
-- **Arquitectura DDD de UI:** Respetar la separación estricta: `presentation/` nunca hace `fetch()`, la lógica de negocio reside en `application/cab-store.ts`, y las llamadas HTTP en `infrastructure/`.
+- **Frontend & Mobile Accessibility:** Mandatorily invoke `frontend-ui-engineering` (WCAG 2.1 AA, high contrast for cabin daylight conditions, large touch targets, and 100% responsive layout for smartphone/tablet).
+- **Browser Testing & Web APIs:** Invoke `browser-testing-with-devtools` to verify PWA lifecycle, Wake Lock API, Audio Alarm, and Geolocation API calls.
+- **Build and Type Verification:** `pnpm build` (`tsc && vite build`).
+- **UI DDD Architecture:** Strictly enforce layer separation: `presentation/` never calls `fetch()`, business logic resides in `application/cab-store.ts`, and HTTP requests live in `infrastructure/`.
 
 ## Stack and Versions
 
