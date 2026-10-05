@@ -28,7 +28,7 @@ export function App() {
   }, [session, truckId, setTruckInfo]);
 
   useEffect(() => {
-    if (!isAuthenticated || !truckId) {
+    if (!isAuthenticated || !truckId || state === 'OFF_DUTY') {
       return;
     }
 
@@ -56,7 +56,7 @@ export function App() {
       clearInterval(interval);
       unsubscribeCentrifugo();
     };
-  }, [isAuthenticated, truckId, session?.token]);
+  }, [isAuthenticated, truckId, session?.token, state]);
 
   if (!isAuthenticated) {
     return (

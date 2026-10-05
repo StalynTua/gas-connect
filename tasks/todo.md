@@ -223,6 +223,29 @@
 
 ---
 
+## Phase 10: Duty State Control & In-Transit Logout Guard (`cab-duty-status`)
+- [x] **Task 29: Control de Estado Activo/Inactivo y Bloqueo de Cierre de Sesión en Reparto**
+  - **Acceptance:**
+    - `cab-pwa`: Tipo `CabState` ampliado con `'OFF_DUTY'`.
+    - `cab-store.ts`: Nueva acción `setDutyStatus('IDLE' | 'OFF_DUTY')` que notifica al backend vía `updateTruckStatus`, inhabilita el envío periódico de telemetría y bloquea transiciones si el camión está en `'IN_TRANSIT'`.
+    - `auth-store.ts`: `logout()` notifica al backend poniendo el camión en `'OFF_DUTY'` antes de invalidar la sesión y limpiar storage local.
+    - `DutyToggleModal.tsx`: Componente accesible desde botón flotante en `IdleView` con switch ON/OFF de alto contraste para alternar entre Activo (`IDLE`) e Inactivo (`OFF_DUTY`).
+    - `IdleView.tsx`: Indicador de estado visual (Disponible en verde vs Fuera de Turno en gris) y botón flotante de control de disponibilidad.
+    - `ActiveDeliveryView.tsx`: Botón de logout visible pero deshabilitado visualmente (gris, sin interacción) con tooltip explicativo *"Completa la entrega antes de salir"*.
+    - `App.tsx`: Cuando el estado es `'OFF_DUTY'`, Centrifugo se desconecta y no recibe ofertas ni telemetría periódica; al regresar a `'IDLE'`, se reconecta reactivamente.
+  - **Verify:** `pnpm --filter @gasconnect/api test` (tests pasando), `pnpm --filter cab-pwa build` limpio sin errores.
+  - **Files:** `apps/cab-pwa/src/domain/cab-state.types.ts`, `apps/cab-pwa/src/application/cab-store.ts`, `apps/cab-pwa/src/application/auth-store.ts`, `apps/cab-pwa/src/presentation/components/DutyToggleModal.tsx`, `apps/cab-pwa/src/presentation/components/IdleView.tsx`, `apps/cab-pwa/src/presentation/components/ActiveDeliveryView.tsx`, `apps/cab-pwa/src/App.tsx`, `apps/api/tests/unit/cab-auth-store.test.ts`.
+  - **Scope:** M (8 files).
+
+### Checkpoint 8: Control de Turno y Restricciones Operativas Certificadas
+- [x] Estado `OFF_DUTY` soportado en frontend y sincronizado con backend.
+- [x] Ayudante puede pasar a inactivo manualmente y regresar a activo sin cerrar sesión.
+- [x] Cierre de sesión pone automáticamente el camión en `OFF_DUTY` en backend.
+- [x] Cierre de sesión bloqueado visual y funcionalmente durante reparto (`IN_TRANSIT`).
+- [x] Telemetría y ofertas de Centrifugo pausadas en modo `OFF_DUTY`.
+
+---
+
 ## 📋 Backlog / Próximos Desarrollos (Ver `tasks/backlog.md`)
 
 - [ ] **Task 26: Autenticación y Control de Acceso en Ops Portal (`ops-auth`)**
@@ -236,6 +259,7 @@
 - [ ] **Task 28: Autenticación e Identidad para PWA Ciudadana (`customer-pwa`)**
   - **Description:** Registro y acceso de clientes mediante número verificado (OTP WhatsApp / Evolution API) bajo el rol `CUSTOMER` del módulo `auth`.
   - **Scope:** L (`apps/customer-pwa`, `apps/api`)
+
 
 
 

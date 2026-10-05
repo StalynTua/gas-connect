@@ -1,4 +1,4 @@
-export type CabState = 'IDLE' | 'OFFERED' | 'IN_TRANSIT' | 'RESTOCKING';
+export type CabState = 'IDLE' | 'OFFERED' | 'IN_TRANSIT' | 'RESTOCKING' | 'OFF_DUTY';
 
 export interface ActiveOffer {
   dispatchAttemptId: string;
@@ -40,4 +40,5 @@ export interface CabStoreState {
   syncWithBackend: () => Promise<void>;
   sendTelemetry: (lat?: number, lng?: number) => Promise<void>;
   setTruckStatus: (status: 'IDLE' | 'IN_TRANSIT') => Promise<void>;
+  setDutyStatus: (status: 'IDLE' | 'OFF_DUTY') => Promise<void>;
 }

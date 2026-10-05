@@ -1,4 +1,4 @@
-export type TruckStatus = 'IDLE' | 'IN_TRANSIT' | 'OFFLINE';
+export type TruckStatus = 'IDLE' | 'IN_TRANSIT' | 'OFFLINE' | 'OFF_DUTY' | 'RESTOCKING';
 
 export interface FleetTruckSummary {
   id: string;

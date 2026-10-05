@@ -146,6 +146,15 @@ export function buildCabStore(client: ICabApiClient = cabApiClient) {
       await client.updateTruckStatus(truckId, status);
     },
 
+    setDutyStatus: async (status: 'IDLE' | 'OFF_DUTY') => {
+      const { truckId, state } = get();
+      if (state === 'IN_TRANSIT') return;
+      set({ state: status });
+      if (truckId) {
+        await client.updateTruckStatus(truckId, status);
+      }
+    },
+
     decrementStock: (qty) => {
       const { stockFull, stockEmpty } = get();
       set({
@@ -172,7 +181,7 @@ export function buildCabStore(client: ICabApiClient = cabApiClient) {
 
     sendTelemetry: async (lat, lng) => {
       const { truckId, stockFull, state } = get();
-      if (!truckId) return;
+      if (!truckId || state === 'OFF_DUTY') return;
       const latitude = lat ?? 0.3475;
       const longitude = lng ?? -78.1285;
       const operationalStatus = state === 'IN_TRANSIT' ? 'IN_TRANSIT' : 'IDLE';

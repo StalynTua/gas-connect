@@ -99,9 +99,14 @@ export function buildAuthStore(
 
     logout: async () => {
       const { session } = get();
+      if (session?.truckId) {
+        // Notificar al backend que el camión pasa a estado inactivo (OFF_DUTY)
+        await client.updateTruckStatus(session.truckId, 'OFF_DUTY').catch(() => {});
+      }
+
       if (session?.token) {
         // Notificar al backend sin bloquear si no hay conexión
-        client.logout(session.token).catch(() => {});
+        await client.logout(session.token).catch(() => {});
       }
 
       // Desconectar socket Centrifugo

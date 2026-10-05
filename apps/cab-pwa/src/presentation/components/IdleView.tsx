@@ -1,11 +1,16 @@
+import { useState } from 'react';
 import { useCabStore, ActiveOffer } from '../../application/cab-store.js';
 import { useAuthStore } from '../../application/auth-store.js';
 import { cabApiClient } from '../../infrastructure/cab-api.client.js';
-import { Truck, Wifi, ShieldAlert, Sparkles, Navigation, LogOut } from 'lucide-react';
+import { Truck, Wifi, ShieldAlert, Sparkles, Navigation, LogOut, Sliders, Moon } from 'lucide-react';
+import { DutyToggleModal } from './DutyToggleModal.js';
 
 export function IdleView() {
-  const { licensePlate, helperName, stockFull, isConnected, isDBSynced, receiveOffer, setTruckStatus } = useCabStore();
+  const { state, licensePlate, helperName, stockFull, isConnected, isDBSynced, receiveOffer, setTruckStatus } = useCabStore();
   const { logout } = useAuthStore();
+  const [isDutyModalOpen, setIsDutyModalOpen] = useState(false);
+
+  const isAvailable = state === 'IDLE';
 
   const handleSimulateIncomingOrder = async () => {
     // 1. Intentar crear orden simulada real en el backend para generar sesión de despacho válida
@@ -41,14 +46,30 @@ export function IdleView() {
   };
 
   return (
-    <div className="flex-1 flex flex-col justify-between p-4 md:p-6 bg-slate-950">
+    <div className="flex-1 flex flex-col justify-between p-4 md:p-6 bg-slate-950 relative">
       {/* Estado del Vehículo */}
       <div>
         <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-          <div className="flex items-center gap-2">
-            <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
-            <span className="text-xs uppercase font-extrabold text-emerald-400">Disponible</span>
-          </div>
+          <button
+            type="button"
+            onClick={() => setIsDutyModalOpen(true)}
+            className="flex items-center gap-2 px-2.5 py-1 rounded-full bg-slate-900 border border-slate-800 hover:border-slate-700 transition"
+            title="Cambiar disponibilidad de turno"
+          >
+            <div
+              className={`w-2.5 h-2.5 rounded-full ${
+                isAvailable ? 'bg-emerald-400 animate-ping' : 'bg-slate-500'
+              }`}
+            />
+            <span
+              className={`text-xs uppercase font-extrabold ${
+                isAvailable ? 'text-emerald-400' : 'text-slate-400'
+              }`}
+            >
+              {isAvailable ? 'Disponible' : 'Fuera de Turno'}
+            </span>
+            <Sliders className="w-3 h-3 text-slate-400 ml-0.5" />
+          </button>
           <div className="flex items-center gap-2.5 text-xs font-bold">
             <span
               className={`px-2 py-0.5 rounded text-[10px] uppercase font-black ${
@@ -123,6 +144,26 @@ export function IdleView() {
           Simular Pedido Entrante en Los Ceibos
         </button>
       </div>
+
+      {/* Botón flotante para alternar estado de turno */}
+      <button
+        type="button"
+        onClick={() => setIsDutyModalOpen(true)}
+        className={`fixed bottom-28 right-5 w-14 h-14 rounded-full shadow-2xl flex items-center justify-center border-2 z-40 transition-transform active:scale-95 ${
+          isAvailable
+            ? 'bg-emerald-600 hover:bg-emerald-500 border-emerald-400 text-white shadow-emerald-950/50'
+            : 'bg-slate-800 hover:bg-slate-700 border-slate-600 text-slate-300 shadow-black/60'
+        }`}
+        title={isAvailable ? 'Camión Activo — Toca para pausar' : 'Camión Inactivo — Toca para activar'}
+        aria-label="Abrir modal de disponibilidad de turno"
+      >
+        {isAvailable ? <Sliders className="w-6 h-6" /> : <Moon className="w-6 h-6" />}
+      </button>
+
+      <DutyToggleModal
+        isOpen={isDutyModalOpen}
+        onClose={() => setIsDutyModalOpen(false)}
+      />
     </div>
   );
 }

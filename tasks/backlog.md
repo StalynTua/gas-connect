@@ -13,6 +13,8 @@ Este documento registra los requerimientos, funcionalidades y mejoras pendientes
   - [ ] **Pantalla de Login en `ops-portal`:** Vista de acceso en React con validación de credenciales contra `POST /api/v1/auth/login`.
   - [ ] **Guard de Protección de Rutas en `ops-portal`:** Bloquear la visualización del mapa de flota en vivo (`LiveFleetMap`), tarjetas de métricas (`MetricsCards`) y eventos si no existe una sesión autenticada.
   - [ ] **Manejo de Sesión y Logout:** Almacenamiento seguro del token de operador y botón de cierre de sesión en la barra de navegación superior.
+  - [ ] **Indicador de Camiones Fuera de Servicio (`OFF_DUTY`):** Visualizar en `LiveFleetMap` y en la lista de camiones a las unidades en estado `OFF_DUTY` con su última ubicación reportada y un indicador visual distintivo (gris o ícono de fuera de turno) sin ocultarlos completamente de la vista operativa.
+
 
 ---
 

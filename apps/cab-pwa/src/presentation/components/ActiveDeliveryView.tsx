@@ -1,5 +1,5 @@
 import { useCabStore } from '../../application/cab-store.js';
-import { CheckCircle2, MapPin, Navigation, Compass, AlertTriangle } from 'lucide-react';
+import { CheckCircle2, MapPin, Navigation, Compass, AlertTriangle, LogOut } from 'lucide-react';
 
 export function ActiveDeliveryView() {
   const { activeOrder, completeDelivery, stockFull, setTruckStatus, licensePlate, helperName } = useCabStore();
@@ -17,9 +17,19 @@ export function ActiveDeliveryView() {
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
               En Ruta / En Reparto
             </span>
-            <span className="text-xs font-bold text-slate-400">
-              Stock actual: <strong className="text-white">{stockFull}</strong>
-            </span>
+            <div className="flex items-center gap-2.5">
+              <span className="text-xs font-bold text-slate-400">
+                Stock actual: <strong className="text-white">{stockFull}</strong>
+              </span>
+              <button
+                disabled
+                title="Completa la entrega antes de salir"
+                className="p-1 text-slate-600 cursor-not-allowed rounded-lg opacity-40"
+                aria-label="Cerrar turno deshabilitado"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </div>
           </div>
 
           <div className="mt-8 text-center">
@@ -71,9 +81,19 @@ export function ActiveDeliveryView() {
           <span className="text-xs uppercase font-extrabold text-emerald-400 bg-emerald-950/60 px-3 py-1 rounded-full border border-emerald-800">
             En Ruta hacia el Cliente
           </span>
-          <span className="text-xs font-bold text-slate-400">
-            Stock actual: <strong className="text-white">{stockFull}</strong>
-          </span>
+          <div className="flex items-center gap-2.5">
+            <span className="text-xs font-bold text-slate-400">
+              Stock actual: <strong className="text-white">{stockFull}</strong>
+            </span>
+            <button
+              disabled
+              title="Completa la entrega antes de salir"
+              className="p-1 text-slate-600 cursor-not-allowed rounded-lg opacity-40"
+              aria-label="Cerrar turno deshabilitado"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
         <div className="mt-4">

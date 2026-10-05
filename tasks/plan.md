@@ -217,12 +217,31 @@ GasConnect Ibarra es un sistema de coordinación y despacho oportuno de gas GLP 
   - **Scope:** M (11 files).
 
 #### Checkpoint 7: Fleet Authentication Certified
-- [x] Flota piloto autenticada con credenciales validadas con Argon2id.
-- [x] Tokens de sesión opacos protegidos en reposo con SHA-256.
-- [x] Interfaz de login y botón de logout funcionales en `cab-pwa`.
-- [x] ADR-003 documentado y registrado.
+---
+
+### Phase 10: Duty State Control & In-Transit Logout Guard (`cab-duty-status`)
+
+- **Task 29: Control de Estado Activo/Inactivo y Bloqueo de Cierre de Sesión en Reparto**
+  - **Description:** Implementar en `cab-pwa` la capacidad de que el ayudante alterne manualmente entre estado Disponible (`IDLE`) y Fuera de Servicio (`OFF_DUTY`) sin cerrar sesión, mediante un modal flotante con interruptor ON/OFF. Asegurar que al cerrar sesión el camión quede automáticamente en `OFF_DUTY` en backend, y bloquear el cierre de sesión o cambio de disponibilidad si el camión se encuentra en ruta (`IN_TRANSIT`).
+  - **Acceptance:**
+    - `CabState` soporta `'OFF_DUTY'`.
+    - `cab-store.ts` expone `setDutyStatus('IDLE' | 'OFF_DUTY')` que notifica a `POST /api/v1/fleet/trucks/:id/status` y detiene telemetría periódica.
+    - `auth-store.ts` en `logout()` notifica al backend poniendo el camión en `OFF_DUTY`.
+    - `ActiveDeliveryView` muestra botón de logout deshabilitado (gris, inactivo) con tooltip: *"Completa la entrega antes de salir"*.
+    - `DutyToggleModal` ofrece switch ON/OFF táctil de alto contraste accesible desde botón flotante en `IdleView`.
+    - `App.tsx` suspende la suscripción de Centrifugo y la telemetría periódica mientras el camión está en `OFF_DUTY`, reconectando al volver a `IDLE`.
+  - **Verification:** `pnpm --filter @gasconnect/api test` y `pnpm --filter cab-pwa build`.
+  - **Dependencies:** Task 25.
+  - **Files:** `apps/cab-pwa/src/domain/cab-state.types.ts`, `apps/cab-pwa/src/application/cab-store.ts`, `apps/cab-pwa/src/application/auth-store.ts`, `apps/cab-pwa/src/presentation/components/DutyToggleModal.tsx`, `apps/cab-pwa/src/presentation/components/IdleView.tsx`, `apps/cab-pwa/src/presentation/components/ActiveDeliveryView.tsx`, `apps/cab-pwa/src/App.tsx`, `apps/api/tests/unit/cab-auth-store.test.ts`.
+  - **Scope:** M (8 files).
+
+#### Checkpoint 8: Duty State Control & Safe Operations Certified
+- [x] Transición controlada a `OFF_DUTY` manual y en logout.
+- [x] Bloqueo preventivo de abandono o cambio de estado durante reparto en curso.
+- [x] Desconexión limpia de Centrifugo y telemetría en inactividad.
 
 ---
+
 
 
 ## Risks and Mitigations
