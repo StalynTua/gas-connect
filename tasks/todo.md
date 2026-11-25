@@ -246,6 +246,58 @@
 
 ---
 
+## Phase 11: In-Cab Industrial Design System — Login View (`cab-design-login`)
+- [x] **Task 30: Documentación, Tokens Base y Backlog de Modo Noche / Seguridad**
+  - **Acceptance:**
+    - `DESIGN.md` actualizado con paleta industrial real (`#185686`, `#E78B47`, `#102D43`, `#7A8C99`, etc.) y contraste validado WCAG 2.1 AA.
+    - `tasks/backlog.md` enriquecido con las épicas de Modo Día/Noche en Cabina y Seguridad de Sesiones en Backend con restricciones y criterios de aceptación.
+  - **Verify:** Comprobación de markdown y contrastes.
+  - **Files:** `apps/cab-pwa/DESIGN.md`, `tasks/backlog.md`
+  - **Scope:** S
+
+- [x] **Task 31: Centralización de Marca Comercial y Tokens Semánticos en Tailwind**
+  - **Acceptance:**
+    - `APP_BRAND` implementado en `apps/cab-pwa/src/config/app-brand.ts` parametrizando nombre comercial y URL de contacto (`VITE_DISPATCH_CONTACT_URL`).
+    - `tailwind.config.js` extendido aditivamente con tokens `industrial.*` preservando compatibilidad con vistas existentes.
+  - **Verify:** `pnpm check:fast` limpio.
+  - **Files:** `apps/cab-pwa/src/config/app-brand.ts`, `apps/cab-pwa/tailwind.config.js`
+  - **Scope:** S
+
+- [x] **Task 32: Adaptación de Dominio y Lógica de Aplicación (Auth Store & Types)**
+  - **Acceptance:**
+    - `domain/auth.types.ts` actualizado con campos opcionales `attemptsRemaining`, `lockedUntil`, `statusCode`.
+    - `application/auth-store.ts` expone `isLocked`, `attemptsRemaining`, `lockedUntil` y maneja transiciones de bloqueo/error sin romper tipos.
+  - **Verify:** `pnpm check:fast` limpio.
+  - **Files:** `apps/cab-pwa/src/domain/auth.types.ts`, `apps/cab-pwa/src/application/auth-store.ts`
+  - **Scope:** S
+
+- [x] **Task 33: Rediseño Fiel de `LoginView.tsx` (4 Estados Industriales de Stitch)**
+  - **Acceptance:**
+    - Implementación de 4 estados visuales: Normal, Cargando (spinner/bloqueo de inputs), Error (borde rojo con intentos y botón de reintento) y Bloqueado (deshabilitado total y contacto a planta).
+    - Botón primario en Ámbar `#E78B47` con texto Navy `#102D43` (contraste 5.53:1).
+    - Cumplimiento estricto de WCAG 2.1 AA (touch targets 56px, navegación por teclado, roles ARIA).
+    - Modo desarrollo (`import.meta.env.DEV`) con selector para pruebas manuales de estados.
+  - **Verify:** `pnpm --filter cab-pwa run build` limpio.
+  - **Files:** `apps/cab-pwa/src/presentation/components/LoginView.tsx`
+  - **Scope:** S
+
+- [x] **Task 34: Suite de Pruebas Funcionales, Simplificación de Código y Revisión de 5 Ejes**
+  - **Acceptance:**
+    - Tests funcionales en `apps/api/tests/unit/cab-auth-store.test.ts` cubriendo normal, cargando, conteo de intentos y bloqueo sin dependencias extras en `cab-pwa`.
+    - Aplicación de `code-simplification` y auditoría de calidad de 5 ejes (`code-review-and-quality`).
+    - Verificación de presupuesto de bundle (≤ 300 kB) y cero infracciones DDD.
+  - **Verify:** `pnpm check:task && pnpm check:full`.
+  - **Files:** `apps/api/tests/unit/cab-auth-store.test.ts`
+  - **Scope:** S
+
+### Checkpoint 9: In-Cab Login Industrial Certified
+- [x] Fuente de verdad y backlog de modo oscuro/seguridad registrados.
+- [x] Marca centralizada editable en un solo punto.
+- [x] 4 estados de Login de Stitch fielmente implementados y accesibles.
+- [x] Pruebas funcionales en verde y presupuesto de bundle respetado.
+
+---
+
 ## 📋 Backlog / Próximos Desarrollos (Ver `tasks/backlog.md`)
 
 - [ ] **Task 26: Autenticación y Control de Acceso en Ops Portal (`ops-auth`)**

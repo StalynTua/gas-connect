@@ -242,6 +242,70 @@ GasConnect Ibarra es un sistema de coordinación y despacho oportuno de gas GLP 
 
 ---
 
+### Phase 11: In-Cab Industrial Design System — Login View (`cab-design-login`)
+
+- **Task 30: Documentación, Tokens Base y Backlog de Modo Noche / Seguridad**
+  - **Description:** Consolidar la fuente de verdad en `apps/cab-pwa/DESIGN.md` con la paleta industrial real (`#185686`, `#E78B47`, `#102D43`, `#7A8C99`, etc.) y corregir ratios de contraste WCAG AA. Registrar en `tasks/backlog.md` las épicas de Modo Día/Noche en Cabina y Seguridad de Sesiones en Backend.
+  - **Acceptance:**
+    - `DESIGN.md` cuenta con tokens YAML alineados con los valores de texto y contrastes WCAG 2.1 AA validados.
+    - `tasks/backlog.md` incluye especificaciones, restricciones (cero flicker, bundle, performance) y criterios de aceptación para el Modo Noche y Rate Limiting.
+  - **Verification:** Validación de markdown y comprobación de ratios de contraste.
+  - **Dependencies:** Task 25, Task 29.
+  - **Files:** `apps/cab-pwa/DESIGN.md`, `tasks/backlog.md`.
+  - **Scope:** S (2 files).
+
+- **Task 31: Centralización de Marca Comercial y Tokens Semánticos en Tailwind**
+  - **Description:** Crear la constante centralizada `APP_BRAND` en `apps/cab-pwa/src/config/app-brand.ts` para parametrizar el nombre comercial en un único punto. Configurar en `apps/cab-pwa/tailwind.config.js` la escala de colores semánticos `industrial.*` de forma aditiva.
+  - **Acceptance:**
+    - `APP_BRAND` exporta nombres, subtítulos, disclaimer y URL configurable de contacto (`VITE_DISPATCH_CONTACT_URL`).
+    - `tailwind.config.js` extiende la paleta industrial sin alterar los tokens preexistentes de `gas.*`.
+  - **Verification:** `pnpm check:fast`.
+  - **Dependencies:** Task 30.
+  - **Files:** `apps/cab-pwa/src/config/app-brand.ts`, `apps/cab-pwa/tailwind.config.js`.
+  - **Scope:** S (2 files).
+
+- **Task 32: Adaptación de Dominio y Lógica de Aplicación (Auth Store & Types)**
+  - **Description:** Ampliar los tipos de dominio en `domain/auth.types.ts` y las acciones del store en `application/auth-store.ts` para dar soporte a `attemptsRemaining`, `lockedUntil` e `isLocked`.
+  - **Acceptance:**
+    - `LoginResponse` admite campos opcionales de conteo de intentos y bloqueo.
+    - `AuthStoreState` expone `isLocked`, `attemptsRemaining`, `lockedUntil` y métodos de reseteo.
+  - **Verification:** `pnpm check:fast`.
+  - **Dependencies:** Task 31.
+  - **Files:** `apps/cab-pwa/src/domain/auth.types.ts`, `apps/cab-pwa/src/application/auth-store.ts`.
+  - **Scope:** S (2 files).
+
+- **Task 33: Rediseño Fiel de `LoginView.tsx` (4 Estados Industriales de Stitch)**
+  - **Description:** Implementar la interfaz visual de `LoginView.tsx` aplicando estrictamente el sistema de diseño industrial de Stitch para los 4 estados: Normal, Cargando, Error con reintento, y Bloqueado con asistencia de despacho.
+  - **Acceptance:**
+    - Touch targets de 56px (`h-14`) en campos y CTA.
+    - Botón primario en Ámbar `#E78B47` con texto Navy `#102D43` (contraste 5.53:1).
+    - Estados visuales fieles a Stitch: feedback de carga con spinner, borde rojo con intentos en error, e inhabilitación total en bloqueo.
+    - Selector táctil de previsualización en desarrollo (`import.meta.env.DEV`) para verificación manual.
+    - Accesibilidad WCAG 2.1 AA (etiquetas ARIA, soporte de teclado, contraste).
+  - **Verification:** `pnpm --filter cab-pwa run build`.
+  - **Dependencies:** Task 31, Task 32.
+  - **Files:** `apps/cab-pwa/src/presentation/components/LoginView.tsx`.
+  - **Scope:** S (1 file).
+
+- **Task 34: Suite de Pruebas Funcionales, Simplificación de Código y Revisión de 5 Ejes**
+  - **Description:** Extender las pruebas funcionales en `apps/api/tests/unit/cab-auth-store.test.ts` para verificar las transiciones de estado (normal, cargando, error de intentos, bloqueo) sin agregar nuevas dependencias a `cab-pwa`. Ejecutar simplificación de código (`code-simplification`) y auditoría de calidad (`code-review-and-quality`).
+  - **Acceptance:**
+    - 100% pruebas pasando en `pnpm test`.
+    - Cumplimiento de límites de presupuesto (bundle ≤ 300 kB) y cero violaciones DDD.
+  - **Verification:** `pnpm check:task && pnpm check:full`.
+  - **Dependencies:** Task 32, Task 33.
+  - **Files:** `apps/api/tests/unit/cab-auth-store.test.ts`.
+  - **Scope:** S (1 file).
+
+#### Checkpoint 9: In-Cab Login Industrial Certified
+- [x] Fuente de verdad y backlog de modo oscuro/seguridad registrados.
+- [x] Marca centralizada editable en un solo punto.
+- [x] 4 estados de Login de Stitch fielmente implementados y accesibles.
+- [x] Pruebas funcionales en verde y presupuesto de bundle respetado.
+
+---
+
+
 
 
 ## Risks and Mitigations
