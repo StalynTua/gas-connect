@@ -144,14 +144,52 @@ When the code changes, run `codegraph sync` from the root to update the index in
 
 ---
 
-## Task context (`tasks/`)
+## Task context (`tasks/`) & Spec Kit (`specs/`, `.specify/`)
 
-Project tasks live in `tasks/` at the repository root (a `.task/` directory does not exist and must not be created):
+- `tasks/plan.md` and `tasks/todo.md` — historical MVP specification and completed checklist (keep frozen as reference).
+- `tasks/backlog.md` — product backlog of upcoming epics/features.
+- New features, bug fixes, and idea assessments follow **Spec Kit + Ponytail** as documented in [`docs/guides/speckit-adoption-guide.md`](docs/guides/speckit-adoption-guide.md) and governed by [`.specify/memory/constitution.md`](.specify/memory/constitution.md).
 
-- `tasks/plan.md` — complete project specification (phases, tasks, acceptance criteria).
-- `tasks/todo.md` — progress checklist (`[x]`/`[ ]`).
+---
 
-Before implementing a new task, review these files to understand the context and current state. This root AGENTS.md and the AGENTS.md files for each subproject complement `tasks/`; they do not replace it.
+## 🧭 Spec Kit + Ponytail Workflow Navigator (Mandatory Next-Step Guidance)
+
+Whenever the user proposes work, executes a Spec Kit/Ponytail skill, or finishes a stage in this repository, **always** identify the active flow and close the response with a concise **`Siguiente paso sugerido`** block containing the exact next command (and whether to enable/disable Ponytail), following [`docs/guides/speckit-adoption-guide.md`](docs/guides/speckit-adoption-guide.md).
+
+### 1. Flow Classification
+
+| User Intent | Flow | Artifacts | Entry Command |
+|---|---|---|---|
+| **Evaluar idea** (uncertain scope, product discovery, large epic like `customer-pwa`) | Idea Assessment (`assess`) | `.specify/assessments/<slug>/` | `/speckit-assess-intake "<idea>" slug=<slug>` |
+| **Corrección de bug** (broken behavior, regression, crash) | Bug Triage (`bug`) | `.specify/bugs/<slug>/` | `/speckit-bug-assess "<report>" slug=<slug>` |
+| **Nueva feature** (bounded feature from `tasks/backlog.md` or clear requirement) | Spec-Driven Dev (`SDD`) | `specs/<NNN>-<slug>/` | `/speckit-specify <description>` |
+| **Cambio trivial** (typo, 1-line config/doc edit) | Direct | — | Edit directly + `pnpm check:fast` (no Spec Kit ceremony) |
+
+### 2. Stage Progression & Ponytail Sync
+
+- **Idea Assessment (`assess`)**:
+  `/speckit-assess-intake` → `/speckit-assess-research` → `/speckit-assess-define` → `/speckit-assess-shape` → `/speckit-assess-decide` → *(if `go`)* hand off summary to `/speckit-specify`.
+- **Bug Triage (`bug`)**:
+  `/speckit-bug-assess` → `/ponytail full` + `/speckit-bug-fix` → `stop ponytail` + `/speckit-bug-test` *(only `verified` closes the bug)* → `/ponytail-review` + `pnpm check:task`.
+- **Nueva Feature (`SDD`)**:
+  1. `/speckit-specify` *(normal mode)*
+  2. `/speckit-clarify` *(normal mode — recommended)*
+  3. `/ponytail full` + `/speckit-plan` *(lean design within bundle budgets)*
+  4. `stop ponytail` → `/speckit-checklist` *(optional, for security/auth/critical flows)* → `/speckit-tasks` → `/speckit-analyze`
+  5. `/ponytail full` + `/speckit-implement` *(smallest diff respecting DDD, TDD, and `CONSTRAINTS.md`)*
+  6. `stop ponytail` → `/speckit-converge` *(repeat implement ↔ converge until `Converged`)*
+  7. `/ponytail-review` + `pnpm check:full` + `codegraph sync`
+
+### 3. Priority & Output Format
+
+- **Precedence**: `.specify/memory/constitution.md` and `CONSTRAINTS.md` always override Ponytail on TDD, DDD boundaries, and `floor-guard.mjs`. Use `// shortcut: <limit>, <when to upgrade>` instead of `TODO`.
+- **Closing block** (always include at the end of workflow turns):
+  ```markdown
+  **Siguiente paso sugerido** (`<Flujo>` · Paso `<N>`):
+  - **Modo Ponytail**: `<normal / activar /ponytail full / escribir stop ponytail>`
+  - **Comando**: `<comando exacto con slug si aplica>`
+  - **Por qué**: `<1 línea explicando qué valida o produce este paso>`
+  ```
 
 ---
 

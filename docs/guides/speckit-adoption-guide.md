@@ -188,3 +188,46 @@ Si quieres que toda `spec.md` o `plan.md` de `gas-connect` incluya siempre una s
 ### Qué versionar en Git
 - **Sí versionar**: `.specify/memory/constitution.md`, `.specify/templates/`, `.specify/extensions.yml`, `.specify/init-options.json`, `.agents/skills/speckit-*/` y `specs/`.
 - **Ignorar o revisar**: `.specify/.gitignore` ya protege archivos temporales de runtime. Al hacer tu primer commit de adopción, revisa `git status` para confirmar que no se incluyan secretos ni archivos locales temporales.
+
+---
+
+## 9. Cómo combinar Spec Kit con Ponytail sin conflictos
+
+**Spec Kit** y **Ponytail** resuelven problemas distintos y se complementan bien si respetas su rol:
+- **Spec Kit** gobierna el **qué y la trazabilidad** (`spec → plan → tasks → implement → converge`).
+- **Ponytail** gobierna el **tamaño y simplicidad del diff** (reutilizar código existente, evitar dependencias/abstracciones innecesarias). Ponytail respeta las capas DDD existentes y nunca recorta validaciones, seguridad ni requisitos explícitos.
+
+### Reglas de convivencia (para evitar choques)
+1. **Alcance de sesión de Ponytail**: `/ponytail` queda activo toda la sesión hasta que escribes `stop ponytail` o `normal mode`. Actívalo solo al **diseñar** e **implementar**, y desactívalo antes de auditar o converger.
+2. **Jerarquía en tests y arquitectura**: `.specify/memory/constitution.md` y `CONSTRAINTS.md` siempre tienen prioridad sobre Ponytail en **TDD** y **límites DDD**. Ponytail recorta complejidad innecesaria, nunca tests ni fronteras de capa.
+3. **Atajos `shortcut:` compatibles con `floor-guard.mjs`**: `CONSTRAINTS.md` prohíbe `TODO`, `@ts-ignore` y `eslint-disable`, pero permite documentar decisiones acotadas con `// shortcut: <límite>, <cuándo mejorar>`, auditable luego con `/ponytail-debt`.
+
+### Mapa de uso por fase
+
+| Fase | Modo recomendado | Propósito |
+| :--- | :--- | :--- |
+| `/speckit-specify` y `/speckit-clarify` | **Normal** *(o `/ponytail ultra` solo si quieres recortar alcance antes de definir)* | Capturar requisitos completos sin recortar criterios de aceptación. |
+| `/speckit-plan` | **`/ponytail full`** (o `lite`) | Evitar planes sobre-ingenierizados y proteger los presupuestos de bundle (`cab-pwa ≤ 300 kB`, `ops-portal ≤ 500 kB`). |
+| `/speckit-tasks` y `/speckit-analyze` | **Normal** (`stop ponytail`) | Desglose y reporte de consistencia completos. |
+| `/speckit-implement` | **`/ponytail full`** | Escribir el menor diff limpio que cumple cada tarea respetando DDD y `pnpm check:fast`. |
+| `/speckit-converge` | **Normal** (`stop ponytail`) | Verificar que no falte nada contra `spec.md`, `plan.md` y `tasks.md`. |
+| **Pre-merge / PR** | **`/ponytail-review`** | Complemento de `converge`: caza bugs de borde, carga, seguridad y líneas sobrantes (`Lean: -N lines possible`). |
+| **Mantenimiento periódico** | **`/ponytail-debt`** | Listar todos los comentarios `shortcut:` para que ningún atajo quede olvidado. |
+
+### Secuencia recomendada
+
+```text
+1. /speckit-specify ...                 # modo normal
+2. /speckit-clarify                     # modo normal
+3. /ponytail full                       # anti-bloat para diseño
+4. /speckit-plan ...
+5. stop ponytail
+6. /speckit-tasks
+7. /speckit-analyze
+8. /ponytail full                       # diff mínimo para implementación
+9. /speckit-implement
+10. stop ponytail
+11. /speckit-converge                   # completitud vs spec
+12. /ponytail-review                    # calidad, bugs y bloat antes de merge
+```
+
