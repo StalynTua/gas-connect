@@ -133,4 +133,203 @@ describe('Cab PWA - Auth Store & Session Management', () => {
       status: 'OFF_DUTY',
     });
   });
+
+  it('handles invalid login with attemptsRemaining and records count in state', async () => {
+    const clientWithAttempts: ICabApiClient = {
+      ...mockApiClient,
+      login: async () => ({
+        success: false,
+        error: 'Contraseña incorrecta',
+        attemptsRemaining: 2,
+      }),
+    };
+
+    const useAuth = buildAuthStore(clientWithAttempts, mockStorage);
+    const success = await useAuth.getState().login({
+      licensePlate: 'IAA-1041',
+      password: 'wrong_password',
+    });
+
+    expect(success).toBe(false);
+    const state = useAuth.getState();
+    expect(state.isAuthenticated).toBe(false);
+    expect(state.error).toBe('Contraseña incorrecta');
+    expect(state.attemptsRemaining).toBe(2);
+    expect(state.isLocked).toBe(false);
+  });
+
+  it('transitions to locked state when account lockout is signaled', async () => {
+    const lockoutClient: ICabApiClient = {
+      ...mockApiClient,
+      login: async () => ({
+        success: false,
+        error: 'Acceso temporalmente bloqueado',
+        isLocked: true,
+        statusCode: 423,
+        lockedUntil: '2026-10-05T04:00:00.000Z',
+        attemptsRemaining: 0,
+      }),
+    };
+
+    const useAuth = buildAuthStore(lockoutClient, mockStorage);
+    const success = await useAuth.getState().login({
+      licensePlate: 'IAA-1041',
+      password: 'wrong_password',
+    });
+
+    expect(success).toBe(false);
+    const state = useAuth.getState();
+    expect(state.isLocked).toBe(true);
+    expect(state.attemptsRemaining).toBe(0);
+    expect(state.lockedUntil).toBe('2026-10-05T04:00:00.000Z');
+    expect(state.error).toBe('Acceso temporalmente bloqueado');
+
+    // Attempting login while locked immediately aborts and returns false
+    let called = false;
+    const trackingClient: ICabApiClient = {
+      ...mockApiClient,
+      login: async () => {
+        called = true;
+        return { success: false };
+      },
+    };
+    useAuth.setState({ isLocked: true });
+    const blockedSuccess = await useAuth.getState().login({
+      licensePlate: 'IAA-1041',
+      password: 'GasIbarra2025!',
+    });
+    expect(blockedSuccess).toBe(false);
+    expect(called).toBe(false);
+  });
+
+  it('resets lockout and error state when resetLockout is called', async () => {
+    const useAuth = buildAuthStore(mockApiClient, mockStorage);
+    useAuth.setState({
+      isLocked: true,
+      attemptsRemaining: 0,
+      lockedUntil: '2026-10-05T04:00:00.000Z',
+      error: 'Bloqueado',
+    });
+
+    useAuth.getState().resetLockout();
+
+    const state = useAuth.getState();
+    expect(state.isLocked).toBe(false);
+    expect(state.attemptsRemaining).toBeNull();
+    expect(state.lockedUntil).toBeNull();
+    expect(state.error).toBeNull();
+  });
+
+  it('clears attemptsRemaining, lockedUntil, and isLocked upon successful login', async () => {
+    const useAuth = buildAuthStore(mockApiClient, mockStorage);
+    useAuth.setState({
+      attemptsRemaining: 1,
+      error: 'Error anterior',
+      isLocked: false,
+    });
+
+    const success = await useAuth.getState().login({
+      licensePlate: 'IAA-1041',
+      password: 'GasIbarra2025!',
+    });
+
+    expect(success).toBe(true);
+    const state = useAuth.getState();
+    expect(state.isAuthenticated).toBe(true);
+    expect(state.error).toBeNull();
+    expect(state.attemptsRemaining).toBeNull();
+    expect(state.isLocked).toBe(false);
+    expect(state.lockedUntil).toBeNull();
+  });
+
+  it('tracks isLoading as true while login request is in-flight', async () => {
+    let resolveLogin!: (value: any) => void;
+    const delayedClient: ICabApiClient = {
+      ...mockApiClient,
+      login: () =>
+        new Promise((resolve) => {
+          resolveLogin = resolve;
+        }),
+    };
+
+    const useAuth = buildAuthStore(delayedClient, mockStorage);
+    expect(useAuth.getState().isLoading).toBe(false);
+
+    const loginPromise = useAuth.getState().login({
+      licensePlate: 'IAA-1041',
+      password: 'GasIbarra2025!',
+    });
+
+    expect(useAuth.getState().isLoading).toBe(true);
+
+    resolveLogin({
+      success: true,
+      token: 'token-uuid-1234',
+      truckId: 'truck-ceibos-1',
+      licensePlate: 'IAA-1041',
+      helperName: 'Luis Muenala',
+    });
+
+    const success = await loginPromise;
+    expect(success).toBe(true);
+    expect(useAuth.getState().isLoading).toBe(false);
+  });
+
+  it('handles network exceptions gracefully and records error message', async () => {
+    const errorClient: ICabApiClient = {
+      ...mockApiClient,
+      login: async () => {
+        throw new Error('Connection refused');
+      },
+    };
+
+    const useAuth = buildAuthStore(errorClient, mockStorage);
+    const success = await useAuth.getState().login({
+      licensePlate: 'IAA-1041',
+      password: 'GasIbarra2025!',
+    });
+
+    expect(success).toBe(false);
+    const state = useAuth.getState();
+    expect(state.isLoading).toBe(false);
+    expect(state.isAuthenticated).toBe(false);
+    expect(state.error).toBe('Error de red al intentar conectar con el servidor');
+  });
+
+  it('automatically unlocks when lockedUntil timestamp has elapsed', async () => {
+    let loginCalled = false;
+    const trackingClient: ICabApiClient = {
+      ...mockApiClient,
+      login: async () => {
+        loginCalled = true;
+        return {
+          success: true,
+          token: 'token-uuid-1234',
+          truckId: 'truck-ceibos-1',
+          licensePlate: 'IAA-1041',
+          helperName: 'Luis Muenala',
+        };
+      },
+    };
+
+    const useAuth = buildAuthStore(trackingClient, mockStorage);
+    const pastTimestamp = new Date(Date.now() - 5000).toISOString();
+    useAuth.setState({
+      isLocked: true,
+      lockedUntil: pastTimestamp,
+      error: 'Acceso bloqueado',
+    });
+
+    const success = await useAuth.getState().login({
+      licensePlate: 'IAA-1041',
+      password: 'GasIbarra2025!',
+    });
+
+    expect(loginCalled).toBe(true);
+    expect(success).toBe(true);
+    const state = useAuth.getState();
+    expect(state.isLocked).toBe(false);
+    expect(state.lockedUntil).toBeNull();
+    expect(state.isAuthenticated).toBe(true);
+  });
 });
