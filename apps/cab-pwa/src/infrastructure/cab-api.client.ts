@@ -41,6 +41,10 @@ export class CabApiClient implements ICabApiClient {
       return {
         success: false,
         error: data.error || (res.status === 401 ? 'Credenciales inválidas' : `Error (${res.status})`),
+        attemptsRemaining: typeof data.attemptsRemaining === 'number' ? data.attemptsRemaining : undefined,
+        lockedUntil: data.lockedUntil,
+        isLocked: Boolean(data.isLocked || res.status === 423 || res.status === 429),
+        statusCode: res.status,
       };
     } catch (err) {
       console.warn('[CabApiClient] login network error:', err);

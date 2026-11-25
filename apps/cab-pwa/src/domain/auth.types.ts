@@ -18,4 +18,8 @@ export interface LoginResponse {
   helperName?: string;
   error?: string;
   message?: string;
+  attemptsRemaining?: number;
+  lockedUntil?: string;
+  isLocked?: boolean;
+  statusCode?: number;
 }

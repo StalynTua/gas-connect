@@ -3,16 +3,19 @@ import type { AuthSession, LoginCredentials } from '../domain/auth.types.js';
 import type { ICabApiClient } from '../domain/api-contracts.js';
 import { cabApiClient } from '../infrastructure/cab-api.client.js';
 import { authStorageAdapter, AuthStorageAdapter } from '../infrastructure/auth-storage.adapter.js';
-import { cabCentrifugoAdapter } from '../infrastructure/centrifugo.adapter.js';
 
 export interface AuthStoreState {
   session: AuthSession | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
+  attemptsRemaining: number | null;
+  lockedUntil: string | null;
+  isLocked: boolean;
   login: (credentials: LoginCredentials) => Promise<boolean>;
   logout: () => Promise<void>;
   clearError: () => void;
+  resetLockout: () => void;
 }
 
 type SetStateAction<T> = Partial<T> | ((prev: T) => Partial<T>);
@@ -55,10 +58,30 @@ export function buildAuthStore(
     isAuthenticated: Boolean(initialSession && initialSession.token),
     isLoading: false,
     error: null,
+    attemptsRemaining: null,
+    lockedUntil: null,
+    isLocked: false,
 
     clearError: () => set({ error: null }),
 
+    resetLockout: () =>
+      set({
+        isLocked: false,
+        lockedUntil: null,
+        attemptsRemaining: null,
+        error: null,
+      }),
+
     login: async (credentials: LoginCredentials) => {
+      const { isLocked, lockedUntil } = get();
+      if (isLocked) {
+        if (lockedUntil && Date.now() >= new Date(lockedUntil).getTime()) {
+          set({ isLocked: false, lockedUntil: null, attemptsRemaining: null, error: null });
+        } else {
+          return false;
+        }
+      }
+
       set({ isLoading: true, error: null });
 
       try {
@@ -78,14 +101,25 @@ export function buildAuthStore(
             isAuthenticated: true,
             isLoading: false,
             error: null,
+            attemptsRemaining: null,
+            lockedUntil: null,
+            isLocked: false,
           });
 
           return true;
         }
 
+        const isAccountLocked = Boolean(
+          res.isLocked || res.statusCode === 423 || res.statusCode === 429 || res.lockedUntil
+        );
+        const attemptsLeft = typeof res.attemptsRemaining === 'number' ? res.attemptsRemaining : null;
+
         set({
           isLoading: false,
-          error: res.error || 'Credenciales inválidas',
+          error: res.error || (isAccountLocked ? 'Acceso bloqueado por seguridad' : 'Credenciales inválidas'),
+          isLocked: isAccountLocked,
+          lockedUntil: res.lockedUntil || null,
+          attemptsRemaining: attemptsLeft,
         });
         return false;
       } catch (err) {
@@ -109,9 +143,6 @@ export function buildAuthStore(
         await client.logout(session.token).catch(() => {});
       }
 
-      // Desconectar socket Centrifugo
-      cabCentrifugoAdapter.disconnect();
-
       // Limpiar almacenamiento local
       storage.clearStoredSession();
 
@@ -120,6 +151,9 @@ export function buildAuthStore(
         isAuthenticated: false,
         isLoading: false,
         error: null,
+        attemptsRemaining: null,
+        lockedUntil: null,
+        isLocked: false,
       });
     },
   }));
